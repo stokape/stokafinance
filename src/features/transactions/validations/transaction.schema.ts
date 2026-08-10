@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { currencyCodeSchema, isoDateSchema, moneyAmountSchema } from "@/lib/validations/money.schema";
+import { requiredUuidSchema } from "@/lib/validations/select.schema";
 
 export const createExpenseSchema = z.object({
-  accountId: z.string().uuid("Selecciona una cuenta"),
-  categoryId: z.string().uuid("Selecciona una categoría"),
+  accountId: requiredUuidSchema("Selecciona una cuenta"),
+  categoryId: requiredUuidSchema("Selecciona una categoría"),
   subcategoryId: z.string().uuid().optional().or(z.literal("")),
   amount: moneyAmountSchema(),
   currency: currencyCodeSchema.default("PEN"),
@@ -15,8 +16,8 @@ export const createExpenseSchema = z.object({
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 
 export const createIncomeSchema = z.object({
-  accountId: z.string().uuid("Selecciona una cuenta"),
-  categoryId: z.string().uuid("Selecciona una categoría"),
+  accountId: requiredUuidSchema("Selecciona una cuenta"),
+  categoryId: requiredUuidSchema("Selecciona una categoría"),
   amount: moneyAmountSchema(),
   currency: currencyCodeSchema.default("PEN"),
   transactionDate: isoDateSchema,
@@ -27,8 +28,8 @@ export type CreateIncomeInput = z.infer<typeof createIncomeSchema>;
 
 export const createTransferSchema = z
   .object({
-    accountId: z.string().uuid("Selecciona la cuenta de origen"),
-    destinationAccountId: z.string().uuid("Selecciona la cuenta de destino"),
+    accountId: requiredUuidSchema("Selecciona la cuenta de origen"),
+    destinationAccountId: requiredUuidSchema("Selecciona la cuenta de destino"),
     amount: moneyAmountSchema(),
     currency: currencyCodeSchema.default("PEN"),
     transactionDate: isoDateSchema,

@@ -52,7 +52,7 @@ export function Dialog({ open, onClose, title, description, children, className 
         aria-labelledby="dialog-title"
         tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-xl focus:outline-none",
+          "relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-md flex-col overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl focus:outline-none",
           className,
         )}
       >
