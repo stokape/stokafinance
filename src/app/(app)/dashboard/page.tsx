@@ -69,7 +69,7 @@ export default async function DashboardPage() {
           label="Dinero disponible para gastar"
           value={formatMoney(data.safeToSpend)}
           icon={Sparkles}
-          caption="Sin considerar pagos/presupuesto aún (próximamente)"
+          caption="Descuenta presupuesto reservado; pagos pendientes: próximamente"
         />
       </div>
 

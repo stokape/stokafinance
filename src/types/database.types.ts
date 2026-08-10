@@ -252,6 +252,40 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["credit_card_installment_plans"]["Row"]>;
         Relationships: [];
       };
+      budgets: {
+        Row: {
+          id: string;
+          user_id: string;
+          year: number;
+          month: number;
+          expected_income: string;
+          savings_target: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["budgets"]["Row"]> & { user_id: string; year: number; month: number };
+        Update: Partial<Database["public"]["Tables"]["budgets"]["Row"]>;
+        Relationships: [];
+      };
+      budget_categories: {
+        Row: {
+          id: string;
+          user_id: string;
+          budget_id: string;
+          category_id: string;
+          allocated_amount: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["budget_categories"]["Row"]> & {
+          user_id: string;
+          budget_id: string;
+          category_id: string;
+          allocated_amount: string | number;
+        };
+        Update: Partial<Database["public"]["Tables"]["budget_categories"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {

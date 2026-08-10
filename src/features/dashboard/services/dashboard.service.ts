@@ -5,6 +5,7 @@ import { AccountsService } from "@/features/accounts/services/accounts.service";
 import { CategoriesService } from "@/features/categories/services/categories.service";
 import { TransactionsService } from "@/features/transactions/services/transactions.service";
 import { CreditCardsService } from "@/features/credit-cards/services/credit-cards.service";
+import { BudgetsService } from "@/features/budgets/services/budgets.service";
 import {
   calculateMonthlyCashFlow,
   calculateSavings,
@@ -77,12 +78,15 @@ export class DashboardService {
     const currentMonthEnd = endOfMonth(referenceDate);
     const twelveMonthsAgoStart = startOfMonth(subMonths(referenceDate, 11));
 
-    const [accounts, categories, transactions, recent, creditCards] = await Promise.all([
+    const budgetsService = new BudgetsService(this.supabase);
+
+    const [accounts, categories, transactions, recent, creditCards, budgetOverview] = await Promise.all([
       accountsService.listAccounts(),
       categoriesService.getCategoriesWithSubcategories(),
       transactionsService.listForEngine(dateOnly(twelveMonthsAgoStart), dateOnly(currentMonthEnd)),
       transactionsService.listTransactions({ page: 1, pageSize: 8 }),
       creditCardsService.listCards(),
+      budgetsService.getOverview(referenceDate.getFullYear(), referenceDate.getMonth() + 1),
     ]);
 
     const totalBalance = sumMoney(accounts.map((a) => a.currentBalance));
@@ -133,21 +137,34 @@ export class DashboardService {
     const emergencyFundMonths = calculateEmergencyFundMonths(totalBalance, currentRange.expenses.greaterThan(0) ? currentRange.expenses : 1);
     const debtToIncome = calculateDebtToIncome(0, currentRange.income); // préstamos aún no implementados (Fase 5): 0 real
 
+    // Dinero ya reservado en categorías presupuestadas que aún no se gastó
+    // (sólo la parte positiva: una categoría excedida no "libera" cupo a otra).
+    const reservedBudget = sumMoney(budgetOverview.categories.map((c) => (Number(c.available) > 0 ? c.available : 0)));
+
     const safeToSpendResult = calculateAvailableToSpend({
       liquidBalance: totalBalance,
       confirmedUpcomingIncome: 0,
       upcomingObligatoryPayments: 0, // Bills aún no implementado
       upcomingDebtPayments: 0, // requiere fecha de vencimiento por statement (Fase 5); hoy sólo se conoce el saldo total, no cuánto vence dentro del horizonte
-      reservedBudget: 0, // Presupuesto aún no implementado
+      reservedBudget,
       minimumSavingsGoal: 0,
     });
+
+    // Cumplimiento de presupuesto: 100% si está en/por debajo de lo asignado,
+    // decae linealmente hasta 0% al llegar al doble del presupuesto de una
+    // categoría. Sin categorías presupuestadas todavía: 100 neutral (§27).
+    const budgetCompliancePercentage =
+      budgetOverview.categories.length === 0
+        ? 100
+        : budgetOverview.categories.reduce((acc, c) => acc + Math.min(100, Math.max(0, 200 - c.percentageUsed)), 0) /
+          budgetOverview.categories.length;
 
     const healthScore = generateFinancialHealthScore({
       emergencyFundMonths: emergencyFundMonths.toNumber(),
       savingsRatePercentage: savingsRate.toNumber(),
       debtToIncomePercentage: debtToIncome.toNumber(),
       creditUtilizationPercentage,
-      budgetCompliancePercentage: 100, // sin presupuesto configurado: neutral
+      budgetCompliancePercentage,
       netWorthGrowthPercentage: 0, // requiere financial_snapshots históricos (roadmap Fase 6)
     });
 
