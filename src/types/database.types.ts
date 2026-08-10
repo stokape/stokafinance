@@ -174,6 +174,84 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      credit_cards: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          bank: string;
+          brand: string | null;
+          last_four_digits: string | null;
+          currency: string;
+          credit_limit: string;
+          closing_day: number;
+          payment_day: number;
+          annual_interest_rate: string | null;
+          utilization_alert_threshold: string;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["credit_cards"]["Row"]> & {
+          user_id: string;
+          name: string;
+          bank: string;
+          credit_limit: string | number;
+          closing_day: number;
+          payment_day: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_cards"]["Row"]>;
+        Relationships: [];
+      };
+      credit_card_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          credit_card_id: string;
+          category_id: string | null;
+          subcategory_id: string | null;
+          description: string;
+          merchant: string | null;
+          amount: string;
+          purchase_date: string;
+          installments: number;
+          status: "PENDING" | "CONFIRMED" | "CANCELLED";
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["credit_card_transactions"]["Row"]> & {
+          user_id: string;
+          credit_card_id: string;
+          description: string;
+          amount: string | number;
+          purchase_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_card_transactions"]["Row"]>;
+        Relationships: [];
+      };
+      credit_card_installment_plans: {
+        Row: {
+          id: string;
+          user_id: string;
+          credit_card_transaction_id: string;
+          installment_number: number;
+          amount: string;
+          statement_period: string;
+          status: "PENDING" | "BILLED" | "PAID";
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["credit_card_installment_plans"]["Row"]> & {
+          user_id: string;
+          credit_card_transaction_id: string;
+          installment_number: number;
+          amount: string | number;
+          statement_period: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_card_installment_plans"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {
