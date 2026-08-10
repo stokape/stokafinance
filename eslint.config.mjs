@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Artefactos generados por la Supabase CLI al correr `supabase start`
+    // (Edge Runtime local, secretos temporales) — no es código del proyecto.
+    "supabase/.temp/**",
+    "supabase/.branches/**",
   ]),
 ]);
 
