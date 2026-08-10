@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useMounted } from "@/hooks/use-mounted";
 
 interface DialogProps {
   open: boolean;
@@ -16,10 +18,20 @@ interface DialogProps {
 /**
  * Modal accesible mínimo (sin dependencias externas: costo cero). Cierra con
  * Escape o click fuera, mueve el foco al abrir y lo restaura al cerrar.
+ *
+ * Se monta vía Portal directo a `document.body`. `position: fixed` sólo se
+ * posiciona respecto al viewport si NINGÚN ancestro tiene `transform`,
+ * `filter`/`backdrop-filter`, `perspective` o `will-change` (crean un
+ * "containing block" propio) — el Topbar usa `backdrop-blur` y el menú de
+ * "Nuevo movimiento" envuelve el diálogo en un contenedor `relative`, así
+ * que sin portal el modal se posicionaba respecto a esos ancestros en vez
+ * del viewport (aparecía "pegado arriba" en vez de centrado). El portal
+ * elimina el problema de raíz sin depender de qué ancestro sea el culpable.
  */
 export function Dialog({ open, onClose, title, description, children, className }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const mounted = useMounted();
 
   useEffect(() => {
     if (!open) return;
@@ -40,9 +52,9 @@ export function Dialog({ open, onClose, title, description, children, className 
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden />
       <div
@@ -74,6 +86,7 @@ export function Dialog({ open, onClose, title, description, children, className 
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
