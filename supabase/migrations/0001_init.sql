@@ -11,6 +11,25 @@
 create extension if not exists pgcrypto;
 
 -- -----------------------------------------------------------------------------
+-- 0.1 Privilegios base sobre el schema public
+-- -----------------------------------------------------------------------------
+-- RLS decide QUÉ FILAS ve cada rol, pero primero el rol necesita el GRANT base
+-- para intentar la operación. En Supabase hosted esto lo precarga la
+-- plataforma para el rol con el que se crean los objetos; en un stack local
+-- (CLI + `supabase db push`), las migraciones corren como `postgres`, cuyos
+-- default privileges aquí sólo cubren TRUNCATE/REFERENCES/TRIGGER — sin este
+-- bloque, cada tabla nueva queda inaccesible para `anon`/`authenticated`
+-- aunque las policies de RLS sean correctas. Los `alter default privileges`
+-- cubren además las tablas que se creen en migraciones futuras.
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on routines to anon, authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
 -- 1. Funciones utilitarias genéricas
 -- -----------------------------------------------------------------------------
 
