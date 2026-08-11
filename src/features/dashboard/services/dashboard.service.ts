@@ -9,6 +9,7 @@ import { BudgetsService } from "@/features/budgets/services/budgets.service";
 import { LoansService } from "@/features/loans/services/loans.service";
 import { BillsService } from "@/features/bills/services/bills.service";
 import type { BillWithUrgency } from "@/features/bills/types/bill.types";
+import { ForecastService } from "@/features/forecast/services/forecast.service";
 import {
   calculateMonthlyCashFlow,
   calculateSavings,
@@ -20,6 +21,8 @@ import {
   calculateDebtToIncome,
   calculateAvailableToSpend,
   generateFinancialHealthScore,
+  generateAlerts,
+  type Alert,
 } from "@/lib/financial-engine";
 import { sumMoney } from "@/lib/utils/money";
 import type { TransactionListItem } from "@/features/transactions/types/transaction.types";
@@ -58,13 +61,15 @@ export interface DashboardData {
   categoryBreakdown: CategoryBreakdownItem[];
   recentTransactions: TransactionListItem[];
   upcomingBills: BillWithUrgency[];
+  alerts: Alert[];
   healthScore: ReturnType<typeof generateFinancialHealthScore>;
   hasAccounts: boolean;
 }
 
 /**
  * Orquesta Accounts + Transactions + Categories + CreditCards + Loans +
- * Budgets + Bills y delega todo el cálculo al Financial Engine.
+ * Budgets + Bills + Forecast y delega todo el cálculo al Financial Engine,
+ * incluido el motor de alertas determinísticas (§26).
  */
 export class DashboardService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -187,6 +192,42 @@ export class DashboardService {
       netWorthGrowthPercentage: 0, // requiere financial_snapshots históricos (roadmap Fase 6)
     });
 
+    // Motor de alertas (§26): comparación de gasto por categoría vs. el
+    // promedio de los 3 meses anteriores, reutilizando `transactions` (ya
+    // trae 12 meses) para no disparar consultas nuevas.
+    const categorySpending = categoryBreakdown.map(({ categoryId, categoryName, amount }) => {
+      const monthlyAmounts = [1, 2, 3].map((i) => {
+        const monthDate = subMonths(referenceDate, i);
+        const totals = groupExpensesByCategory(transactions, dateOnly(startOfMonth(monthDate)), dateOnly(endOfMonth(monthDate)));
+        return (totals.get(categoryId) ?? 0).toString();
+      });
+      const average = sumMoney(monthlyAmounts).dividedBy(3);
+      return { categoryName, currentMonthAmount: amount, averageLastThreeMonths: average.toString() };
+    });
+
+    const upcomingPaymentsNext7Days = sumMoney(
+      upcomingBills.filter((b) => b.dueDate <= dateOnly(addDays(referenceDate, 7))).map((b) => b.amount),
+    );
+
+    const previousSavings = calculateSavings(previousRange.income, previousRange.expenses);
+    const previousSavingsRate = calculateSavingsRate(previousRange.income, previousSavings);
+
+    const forecast = await new ForecastService(this.supabase).getForecast(30);
+
+    const alerts = generateAlerts({
+      categorySpending,
+      creditCardUtilizations: creditCards.map((c) => ({
+        cardName: c.name,
+        utilizationPercentage: c.utilizationPercentage,
+        alertThreshold: Number(c.utilizationAlertThreshold),
+      })),
+      upcomingPaymentsNext7Days: upcomingPaymentsNext7Days.toString(),
+      forecastNegativeDate: forecast.negativeDates[0] ?? null,
+      budgetOverages: budgetOverview.categories.filter((c) => c.status === "EXCEEDED").map((c) => ({ categoryName: c.categoryName, percentageUsed: c.percentageUsed })),
+      currentSavingsRate: savingsRate.toNumber(),
+      previousSavingsRate: previousSavingsRate.toNumber(),
+    });
+
     return {
       totalBalance: totalBalance.toString(),
       netWorth: netWorth.toString(),
@@ -204,6 +245,7 @@ export class DashboardService {
       categoryBreakdown,
       recentTransactions: recent.items,
       upcomingBills: upcomingBills.slice(0, 6),
+      alerts,
       healthScore,
       hasAccounts: accounts.length > 0,
     };

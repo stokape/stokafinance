@@ -7,6 +7,7 @@ import { KpiCard } from "@/features/dashboard/components/kpi-card";
 import { HealthScoreCard } from "@/features/dashboard/components/health-score-card";
 import { RecentTransactionsCard } from "@/features/dashboard/components/recent-transactions-card";
 import { UpcomingBillsCard } from "@/features/dashboard/components/upcoming-bills-card";
+import { AlertsPanel } from "@/features/dashboard/components/alerts-panel";
 import { CashflowChart, CategoryBreakdownChart } from "@/features/dashboard/components/lazy-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -44,6 +45,8 @@ export default async function DashboardPage() {
         <h1 className="text-xl font-semibold">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Resumen de tu situación financiera este mes.</p>
       </div>
+
+      <AlertsPanel alerts={data.alerts} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Saldo disponible" value={formatMoney(data.totalBalance)} icon={Wallet} caption="Suma de todas tus cuentas activas" />

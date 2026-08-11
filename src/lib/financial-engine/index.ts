@@ -19,3 +19,4 @@ export * from "./safe-to-spend";
 export * from "./health-score";
 export * from "./amortization";
 export * from "./goals";
+export * from "./alerts";
