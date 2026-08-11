@@ -85,7 +85,10 @@ allowed_cidrs_v6 = ["::/0"]
 # enabled = true
 
 [realtime]
-enabled = true
+# Deshabilitado: STOKA Finance no usa suscripciones en vivo (§ nada del app
+# se suscribe a channels de Supabase Realtime). Reactivar si se implementa
+# alguna UI que necesite updates en vivo entre pestañas/dispositivos.
+enabled = false
 # Bind realtime via either IPv4 or IPv6. (default: IPv4)
 # ip_version = "IPv6"
 # The maximum length in bytes of HTTP request headers. (default: 4096)
@@ -113,7 +116,9 @@ port = 54324
 # sender_name = "Admin"
 
 [storage]
-enabled = true
+# Deshabilitado: STOKA Finance no sube archivos hoy (sin avatares, sin
+# adjuntos de boletas). Reactivar cuando se implemente OCR/adjuntos.
+enabled = false
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
@@ -372,7 +377,9 @@ authorization_url_path = "/oauth/consent"
 allow_dynamic_registration = false
 
 [edge_runtime]
-enabled = true
+# Deshabilitado: sin Edge Functions en el proyecto (WhatsApp/OCR/Bank Sync
+# siguen deshabilitados por diseño — ver docs/whatsapp.md, docs/costs.md).
+enabled = false
 # Supported request policies: `oneshot`, `per_worker`.
 # `per_worker` (default) — enables hot reload during local development.
 # `oneshot` — fallback mode if hot reload causes issues (e.g. in large repos or with symlinks).
@@ -386,7 +393,9 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# Deshabilitado: es el contenedor más pesado (Logflare, ~580MB en reposo)
+# y sólo alimenta la pestaña de Logs de Studio — no lo usamos para nada.
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
