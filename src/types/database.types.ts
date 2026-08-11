@@ -395,6 +395,38 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["subscriptions"]["Row"]>;
         Relationships: [];
       };
+      financial_goals: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          target_amount: string;
+          target_date: string | null;
+          account_id: string | null;
+          priority: "LOW" | "MEDIUM" | "HIGH";
+          status: "ACTIVE" | "COMPLETED" | "CANCELLED";
+          currency: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["financial_goals"]["Row"]> & { user_id: string; name: string; target_amount: string | number };
+        Update: Partial<Database["public"]["Tables"]["financial_goals"]["Row"]>;
+        Relationships: [];
+      };
+      goal_contributions: {
+        Row: {
+          id: string;
+          user_id: string;
+          goal_id: string;
+          amount: string;
+          contribution_date: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["goal_contributions"]["Row"]> & { user_id: string; goal_id: string; amount: string | number };
+        Update: Partial<Database["public"]["Tables"]["goal_contributions"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {
