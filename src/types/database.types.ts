@@ -517,6 +517,30 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["recurring_transactions"]["Row"]>;
         Relationships: [];
       };
+      import_batches: {
+        Row: {
+          id: string;
+          user_id: string;
+          account_id: string | null;
+          file_name: string;
+          file_type: "CSV" | "XLSX";
+          column_mapping: Record<string, unknown>;
+          total_rows: number;
+          imported_rows: number;
+          duplicate_rows: number;
+          error_rows: number;
+          status: "PENDING" | "PREVIEWED" | "CONFIRMED" | "FAILED";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["import_batches"]["Row"]> & {
+          user_id: string;
+          file_name: string;
+          file_type: Database["public"]["Tables"]["import_batches"]["Row"]["file_type"];
+        };
+        Update: Partial<Database["public"]["Tables"]["import_batches"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {

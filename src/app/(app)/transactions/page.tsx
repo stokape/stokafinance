@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ArrowLeftRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeftRight, Upload } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TransactionsService } from "@/features/transactions/services/transactions.service";
 import { transactionFiltersSchema } from "@/features/transactions/validations/transaction.schema";
@@ -38,9 +39,17 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">Movimientos</h1>
-        <p className="text-sm text-muted-foreground">Todos tus ingresos, gastos y transferencias.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Movimientos</h1>
+          <p className="text-sm text-muted-foreground">Todos tus ingresos, gastos y transferencias.</p>
+        </div>
+        <Link
+          href="/transactions/import"
+          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-muted"
+        >
+          <Upload className="h-4 w-4" /> Importar CSV
+        </Link>
       </div>
 
       {user ? <RecurringTransactionsCard supabase={supabase} userId={user.id} /> : null}
