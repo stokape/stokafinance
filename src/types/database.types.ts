@@ -484,6 +484,39 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["financial_snapshots"]["Row"]>;
         Relationships: [];
       };
+      recurring_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          account_id: string | null;
+          destination_account_id: string | null;
+          category_id: string | null;
+          subcategory_id: string | null;
+          transaction_type: "INCOME" | "EXPENSE" | "TRANSFER";
+          description: string;
+          amount: string;
+          currency: string;
+          frequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "QUARTERLY" | "SEMIANNUAL" | "ANNUAL";
+          start_date: string;
+          end_date: string | null;
+          next_occurrence_date: string;
+          active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["recurring_transactions"]["Row"]> & {
+          user_id: string;
+          transaction_type: Database["public"]["Tables"]["recurring_transactions"]["Row"]["transaction_type"];
+          description: string;
+          amount: string | number;
+          frequency: Database["public"]["Tables"]["recurring_transactions"]["Row"]["frequency"];
+          start_date: string;
+          next_occurrence_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["recurring_transactions"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {

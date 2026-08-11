@@ -5,6 +5,7 @@ import { TransactionsService } from "@/features/transactions/services/transactio
 import { transactionFiltersSchema } from "@/features/transactions/validations/transaction.schema";
 import { TransactionTable } from "@/features/transactions/components/transaction-table";
 import { TransactionsFilterBar } from "@/features/transactions/components/transactions-filter-bar";
+import { RecurringTransactionsCard } from "@/features/recurring-transactions/components/recurring-transactions-card";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -29,6 +30,9 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   });
 
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const service = new TransactionsService(supabase);
   const result = await service.listTransactions(parsedFilters);
 
@@ -38,6 +42,8 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
         <h1 className="text-xl font-semibold">Movimientos</h1>
         <p className="text-sm text-muted-foreground">Todos tus ingresos, gastos y transferencias.</p>
       </div>
+
+      {user ? <RecurringTransactionsCard supabase={supabase} userId={user.id} /> : null}
 
       <TransactionsFilterBar />
 
