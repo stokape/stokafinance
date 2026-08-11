@@ -16,7 +16,23 @@ export const metadata: Metadata = { title: "Patrimonio" };
 
 export default async function NetWorthPage() {
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const service = new NetWorthService(supabase);
+
+  // Snapshot automático del día (§19), sin cron: se asegura al visitar la
+  // página. Es un upsert por fecha — no duplica si ya se guardó hoy, y se
+  // refresca solo si los datos cambiaron desde la última vez. Falla en
+  // silencio para no romper el render si algo sale mal (ej. RLS/red).
+  if (user) {
+    try {
+      await service.saveTodaySnapshot(user.id);
+    } catch {
+      // El snapshot manual sigue disponible como respaldo.
+    }
+  }
+
   const [overview, snapshots] = await Promise.all([service.getOverview(), service.listSnapshots(12)]);
 
   return (
@@ -54,7 +70,7 @@ export default async function NetWorthPage() {
           {snapshots.length === 0 ? (
             <EmptyState
               title="Sin historial todavía"
-              description="Usa «Guardar snapshot de hoy» periódicamente para construir tu evolución de patrimonio (sin cron automático, ver docs/costs.md)."
+              description="Se guarda un snapshot automáticamente cada vez que visitas esta página (sin cron, ver docs/costs.md) — vuelve otro día para ver la evolución."
             />
           ) : (
             <NetWorthChart points={snapshots} />
