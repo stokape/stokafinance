@@ -366,6 +366,35 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["bills"]["Row"]>;
         Relationships: [];
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          provider: string | null;
+          category_id: string | null;
+          amount: string;
+          currency: string;
+          frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "SEMIANNUAL" | "ANNUAL";
+          next_payment_date: string;
+          account_id: string | null;
+          active: boolean;
+          start_date: string;
+          cancellation_date: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["subscriptions"]["Row"]> & {
+          user_id: string;
+          name: string;
+          amount: string | number;
+          frequency: Database["public"]["Tables"]["subscriptions"]["Row"]["frequency"];
+          next_payment_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["subscriptions"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {

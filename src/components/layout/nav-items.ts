@@ -32,7 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/bills", label: "Pagos", icon: Receipt, status: "ready" },
   { href: "/cards", label: "Tarjetas", icon: CreditCard, status: "ready" },
   { href: "/loans", label: "Deudas", icon: Landmark, status: "ready" },
-  { href: "/subscriptions", label: "Suscripciones", icon: Repeat, status: "planned" },
+  { href: "/subscriptions", label: "Suscripciones", icon: Repeat, status: "ready" },
   { href: "/goals", label: "Metas", icon: Target, status: "planned" },
   { href: "/net-worth", label: "Patrimonio", icon: TrendingUp, status: "planned" },
   { href: "/forecast", label: "Proyecciones", icon: LineChart, status: "planned" },
