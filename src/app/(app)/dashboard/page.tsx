@@ -6,6 +6,7 @@ import { DashboardService } from "@/features/dashboard/services/dashboard.servic
 import { KpiCard } from "@/features/dashboard/components/kpi-card";
 import { HealthScoreCard } from "@/features/dashboard/components/health-score-card";
 import { RecentTransactionsCard } from "@/features/dashboard/components/recent-transactions-card";
+import { UpcomingBillsCard } from "@/features/dashboard/components/upcoming-bills-card";
 import { CashflowChart, CategoryBreakdownChart } from "@/features/dashboard/components/lazy-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -69,7 +70,7 @@ export default async function DashboardPage() {
           label="Dinero disponible para gastar"
           value={formatMoney(data.safeToSpend)}
           icon={Sparkles}
-          caption="Descuenta presupuesto reservado y cuotas de préstamo de 30 días; bills: próximamente"
+          caption="Descuenta presupuesto reservado, pagos y cuotas de préstamo de 30 días"
         />
       </div>
 
@@ -101,6 +102,10 @@ export default async function DashboardPage() {
         </Card>
 
         <RecentTransactionsCard items={data.recentTransactions} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <UpcomingBillsCard bills={data.upcomingBills} />
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ import { TransactionsService } from "@/features/transactions/services/transactio
 import { CreditCardsService } from "@/features/credit-cards/services/credit-cards.service";
 import { BudgetsService } from "@/features/budgets/services/budgets.service";
 import { LoansService } from "@/features/loans/services/loans.service";
+import { BillsService } from "@/features/bills/services/bills.service";
+import type { BillWithUrgency } from "@/features/bills/types/bill.types";
 import {
   calculateMonthlyCashFlow,
   calculateSavings,
@@ -55,15 +57,14 @@ export interface DashboardData {
   monthlyEvolution: MonthlyPoint[];
   categoryBreakdown: CategoryBreakdownItem[];
   recentTransactions: TransactionListItem[];
+  upcomingBills: BillWithUrgency[];
   healthScore: ReturnType<typeof generateFinancialHealthScore>;
   hasAccounts: boolean;
 }
 
 /**
  * Orquesta Accounts + Transactions + Categories + CreditCards + Loans +
- * Budgets y delega todo el cálculo al Financial Engine. Bills todavía no
- * existe (ver roadmap), así que "pagos próximos" fuera de préstamos se
- * reporta honestamente en 0 — nunca con datos inventados (§60).
+ * Budgets + Bills y delega todo el cálculo al Financial Engine.
  */
 export class DashboardService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -80,8 +81,9 @@ export class DashboardService {
 
     const budgetsService = new BudgetsService(this.supabase);
     const loansService = new LoansService(this.supabase);
+    const billsService = new BillsService(this.supabase);
 
-    const [accounts, categories, transactions, recent, creditCards, budgetOverview, loans] = await Promise.all([
+    const [accounts, categories, transactions, recent, creditCards, budgetOverview, loans, upcomingBills] = await Promise.all([
       accountsService.listAccounts(),
       categoriesService.getCategoriesWithSubcategories(),
       transactionsService.listForEngine(dateOnly(twelveMonthsAgoStart), dateOnly(currentMonthEnd)),
@@ -89,6 +91,7 @@ export class DashboardService {
       creditCardsService.listCards(),
       budgetsService.getOverview(referenceDate.getFullYear(), referenceDate.getMonth() + 1),
       loansService.listLoans(),
+      billsService.listUpcoming(30),
     ]);
 
     const totalBalance = sumMoney(accounts.map((a) => a.currentBalance));
@@ -155,10 +158,12 @@ export class DashboardService {
       loans.filter((l) => l.nextDueDate && l.nextDueDate <= horizonEnd).map((l) => l.installmentAmount),
     );
 
+    const upcomingObligatoryPayments = sumMoney(upcomingBills.map((b) => b.amount));
+
     const safeToSpendResult = calculateAvailableToSpend({
       liquidBalance: totalBalance,
       confirmedUpcomingIncome: 0,
-      upcomingObligatoryPayments: 0, // Bills aún no implementado
+      upcomingObligatoryPayments,
       upcomingDebtPayments,
       reservedBudget,
       minimumSavingsGoal: 0,
@@ -198,6 +203,7 @@ export class DashboardService {
       monthlyEvolution,
       categoryBreakdown,
       recentTransactions: recent.items,
+      upcomingBills: upcomingBills.slice(0, 6),
       healthScore,
       hasAccounts: accounts.length > 0,
     };

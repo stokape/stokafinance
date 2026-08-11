@@ -342,6 +342,30 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["loan_installments"]["Row"]>;
         Relationships: [];
       };
+      bills: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          category_id: string | null;
+          amount: string;
+          currency: string;
+          due_date: string;
+          expected_payment_date: string | null;
+          account_id: string | null;
+          status: "PENDING" | "SCHEDULED" | "PAID" | "OVERDUE" | "CANCELLED";
+          recurrence: "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "QUARTERLY" | "SEMIANNUAL" | "ANNUAL" | null;
+          recurring: boolean;
+          provider: string | null;
+          notes: string | null;
+          paid_transaction_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["bills"]["Row"]> & { user_id: string; name: string; amount: string | number; due_date: string };
+        Update: Partial<Database["public"]["Tables"]["bills"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {
