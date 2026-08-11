@@ -31,7 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/budgets", label: "Presupuesto", icon: PiggyBank, status: "ready" },
   { href: "/bills", label: "Pagos", icon: Receipt, status: "planned" },
   { href: "/cards", label: "Tarjetas", icon: CreditCard, status: "ready" },
-  { href: "/loans", label: "Deudas", icon: Landmark, status: "planned" },
+  { href: "/loans", label: "Deudas", icon: Landmark, status: "ready" },
   { href: "/subscriptions", label: "Suscripciones", icon: Repeat, status: "planned" },
   { href: "/goals", label: "Metas", icon: Target, status: "planned" },
   { href: "/net-worth", label: "Patrimonio", icon: TrendingUp, status: "planned" },

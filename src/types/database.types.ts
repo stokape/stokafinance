@@ -286,6 +286,62 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["budget_categories"]["Row"]>;
         Relationships: [];
       };
+      loans: {
+        Row: {
+          id: string;
+          user_id: string;
+          lender: string;
+          description: string | null;
+          original_amount: string;
+          interest_rate: string | null;
+          installment_amount: string;
+          number_of_installments: number;
+          start_date: string;
+          next_due_date: string | null;
+          estimated_end_date: string | null;
+          currency: string;
+          disbursement_account_id: string | null;
+          status: "ACTIVE" | "PAID_OFF" | "DEFAULTED" | "CANCELLED";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["loans"]["Row"]> & {
+          user_id: string;
+          lender: string;
+          original_amount: string | number;
+          installment_amount: string | number;
+          number_of_installments: number;
+          start_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["loans"]["Row"]>;
+        Relationships: [];
+      };
+      loan_installments: {
+        Row: {
+          id: string;
+          user_id: string;
+          loan_id: string;
+          installment_number: number;
+          due_date: string;
+          principal_amount: string;
+          interest_amount: string;
+          total_amount: string;
+          status: "PENDING" | "PAID" | "OVERDUE";
+          paid_transaction_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["loan_installments"]["Row"]> & {
+          user_id: string;
+          loan_id: string;
+          installment_number: number;
+          due_date: string;
+          principal_amount: string | number;
+          total_amount: string | number;
+        };
+        Update: Partial<Database["public"]["Tables"]["loan_installments"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {

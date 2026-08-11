@@ -17,3 +17,4 @@ export * from "./upcoming";
 export * from "./forecast";
 export * from "./safe-to-spend";
 export * from "./health-score";
+export * from "./amortization";

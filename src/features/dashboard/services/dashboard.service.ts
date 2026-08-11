@@ -1,11 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { formatISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { addDays, formatISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import type { Database } from "@/types/database.types";
 import { AccountsService } from "@/features/accounts/services/accounts.service";
 import { CategoriesService } from "@/features/categories/services/categories.service";
 import { TransactionsService } from "@/features/transactions/services/transactions.service";
 import { CreditCardsService } from "@/features/credit-cards/services/credit-cards.service";
 import { BudgetsService } from "@/features/budgets/services/budgets.service";
+import { LoansService } from "@/features/loans/services/loans.service";
 import {
   calculateMonthlyCashFlow,
   calculateSavings,
@@ -59,11 +60,10 @@ export interface DashboardData {
 }
 
 /**
- * Orquesta Accounts + Transactions + Categories + CreditCards y delega todo
- * el cálculo al Financial Engine. Préstamos/Bills/Presupuesto todavía no
- * existen (ver roadmap), así que esa parte de la deuda/pagos próximos/
- * presupuesto se reporta honestamente en 0 / "sin configurar" — nunca con
- * datos inventados (§60).
+ * Orquesta Accounts + Transactions + Categories + CreditCards + Loans +
+ * Budgets y delega todo el cálculo al Financial Engine. Bills todavía no
+ * existe (ver roadmap), así que "pagos próximos" fuera de préstamos se
+ * reporta honestamente en 0 — nunca con datos inventados (§60).
  */
 export class DashboardService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -79,23 +79,30 @@ export class DashboardService {
     const twelveMonthsAgoStart = startOfMonth(subMonths(referenceDate, 11));
 
     const budgetsService = new BudgetsService(this.supabase);
+    const loansService = new LoansService(this.supabase);
 
-    const [accounts, categories, transactions, recent, creditCards, budgetOverview] = await Promise.all([
+    const [accounts, categories, transactions, recent, creditCards, budgetOverview, loans] = await Promise.all([
       accountsService.listAccounts(),
       categoriesService.getCategoriesWithSubcategories(),
       transactionsService.listForEngine(dateOnly(twelveMonthsAgoStart), dateOnly(currentMonthEnd)),
       transactionsService.listTransactions({ page: 1, pageSize: 8 }),
       creditCardsService.listCards(),
       budgetsService.getOverview(referenceDate.getFullYear(), referenceDate.getMonth() + 1),
+      loansService.listLoans(),
     ]);
 
     const totalBalance = sumMoney(accounts.map((a) => a.currentBalance));
-    // Préstamos aún no implementados (roadmap Fase 5); tarjetas sí, ya suman deuda real.
     const totalCardDebt = sumMoney(creditCards.map((c) => c.currentDebt));
     const totalCardLimit = sumMoney(creditCards.map((c) => c.creditLimit));
-    const totalDebt = totalCardDebt;
+    const totalLoanDebt = sumMoney(loans.map((l) => l.currentBalance));
+    const totalDebt = totalCardDebt.plus(totalLoanDebt);
     const netWorth = calculateNetWorth(totalBalance, totalDebt);
     const creditUtilizationPercentage = totalCardLimit.greaterThan(0) ? totalCardDebt.dividedBy(totalCardLimit).times(100).toNumber() : 0;
+    // Pagos mensuales de deuda: cuota fija de cada préstamo activo. Las
+    // tarjetas no tienen "cuota" obligatoria fija en nuestro modelo (el
+    // usuario decide cuánto pagar), así que no se suman aquí — evita
+    // sobreestimar el ratio con un pago mínimo que no modelamos todavía.
+    const monthlyLoanInstallments = sumMoney(loans.map((l) => l.installmentAmount));
 
     const currentRange = calculateCashFlowForRange(transactions, dateOnly(currentMonthStart), dateOnly(currentMonthEnd));
     const previousMonthStart = startOfMonth(subMonths(referenceDate, 1));
@@ -135,17 +142,24 @@ export class DashboardService {
     }
 
     const emergencyFundMonths = calculateEmergencyFundMonths(totalBalance, currentRange.expenses.greaterThan(0) ? currentRange.expenses : 1);
-    const debtToIncome = calculateDebtToIncome(0, currentRange.income); // préstamos aún no implementados (Fase 5): 0 real
+    const debtToIncome = calculateDebtToIncome(monthlyLoanInstallments, currentRange.income);
 
     // Dinero ya reservado en categorías presupuestadas que aún no se gastó
     // (sólo la parte positiva: una categoría excedida no "libera" cupo a otra).
     const reservedBudget = sumMoney(budgetOverview.categories.map((c) => (Number(c.available) > 0 ? c.available : 0)));
 
+    // Cuotas de préstamo que vencen dentro de los próximos 30 días (las
+    // tarjetas aún no tienen fecha de vencimiento por statement modelada).
+    const horizonEnd = dateOnly(addDays(referenceDate, 30));
+    const upcomingDebtPayments = sumMoney(
+      loans.filter((l) => l.nextDueDate && l.nextDueDate <= horizonEnd).map((l) => l.installmentAmount),
+    );
+
     const safeToSpendResult = calculateAvailableToSpend({
       liquidBalance: totalBalance,
       confirmedUpcomingIncome: 0,
       upcomingObligatoryPayments: 0, // Bills aún no implementado
-      upcomingDebtPayments: 0, // requiere fecha de vencimiento por statement (Fase 5); hoy sólo se conoce el saldo total, no cuánto vence dentro del horizonte
+      upcomingDebtPayments,
       reservedBudget,
       minimumSavingsGoal: 0,
     });

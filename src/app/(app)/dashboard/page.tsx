@@ -47,7 +47,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Saldo disponible" value={formatMoney(data.totalBalance)} icon={Wallet} caption="Suma de todas tus cuentas activas" />
         <KpiCard label="Patrimonio neto" value={formatMoney(data.netWorth)} icon={TrendingUp} caption="Activos − pasivos registrados" />
-        <KpiCard label="Deuda total" value={formatMoney(data.totalDebt)} icon={CreditCard} caption="Tarjetas de crédito; préstamos: próximamente" />
+        <KpiCard label="Deuda total" value={formatMoney(data.totalDebt)} icon={CreditCard} caption="Tarjetas de crédito + préstamos" />
         <KpiCard
           label="Ahorro del mes"
           value={formatMoney(data.monthlySavings)}
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
           label="Dinero disponible para gastar"
           value={formatMoney(data.safeToSpend)}
           icon={Sparkles}
-          caption="Descuenta presupuesto reservado; pagos pendientes: próximamente"
+          caption="Descuenta presupuesto reservado y cuotas de préstamo de 30 días; bills: próximamente"
         />
       </div>
 
