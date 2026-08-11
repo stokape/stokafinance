@@ -427,6 +427,63 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["goal_contributions"]["Row"]>;
         Relationships: [];
       };
+      assets: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          asset_type: "CASH" | "ACCOUNT" | "INVESTMENT" | "PROPERTY" | "VEHICLE" | "OTHER";
+          linked_account_id: string | null;
+          current_value: string;
+          currency: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["assets"]["Row"]> & { user_id: string; name: string; asset_type: Database["public"]["Tables"]["assets"]["Row"]["asset_type"]; current_value: string | number };
+        Update: Partial<Database["public"]["Tables"]["assets"]["Row"]>;
+        Relationships: [];
+      };
+      liabilities: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          liability_type: "CREDIT_CARD" | "LOAN" | "MORTGAGE" | "OTHER";
+          linked_credit_card_id: string | null;
+          linked_loan_id: string | null;
+          current_balance: string;
+          currency: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["liabilities"]["Row"]> & {
+          user_id: string;
+          name: string;
+          liability_type: Database["public"]["Tables"]["liabilities"]["Row"]["liability_type"];
+          current_balance: string | number;
+        };
+        Update: Partial<Database["public"]["Tables"]["liabilities"]["Row"]>;
+        Relationships: [];
+      };
+      financial_snapshots: {
+        Row: {
+          id: string;
+          user_id: string;
+          snapshot_date: string;
+          total_assets: string;
+          total_liabilities: string;
+          net_worth: string;
+          cash: string;
+          debt: string;
+          investments: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["financial_snapshots"]["Row"]> & { user_id: string; snapshot_date: string };
+        Update: Partial<Database["public"]["Tables"]["financial_snapshots"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {
       account_balances: {
