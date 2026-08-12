@@ -34,7 +34,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}${next}`);
     }
     logger.warn("auth_callback_exchange_failed", { reason: error.message });
+    // El mensaje de Supabase acá es técnico ("invalid request", "code
+    // challenge does not match", etc.) — no incluye secretos, y mostrarlo es
+    // la única forma de diagnosticar sin acceso a los logs del servidor
+    // (ej. esta sesión no tiene Sentry activo). Se muestra en /login.
+    return NextResponse.redirect(
+      `${origin}/login?error=auth_callback_failed&reason=${encodeURIComponent(error.message)}`,
+    );
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  logger.warn("auth_callback_missing_code", { url: request.url });
+  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed&reason=missing_code`);
 }
