@@ -9,6 +9,7 @@ import type { ImportSummary, NormalizedCsvRow } from "@/features/csv-import/type
 import type { AccountOption, CategoryOption } from "@/features/transactions/components/quick-add-transaction-menu";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
 import { logger } from "@/lib/utils/logger";
+import { MAX_CSV_IMPORT_ROWS } from "@/features/csv-import/constants";
 
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
@@ -20,7 +21,7 @@ async function requireUser() {
 }
 
 export async function getImportFormOptionsAction(): Promise<{ accounts: AccountOption[]; categories: CategoryOption[] }> {
-  const supabase = await createSupabaseServerClient();
+  const { supabase } = await requireUser();
   const [accounts, categories] = await Promise.all([
     new AccountsService(supabase).listAccounts(),
     new CategoriesService(supabase).getCategoriesWithSubcategories(),
@@ -32,6 +33,10 @@ export async function getImportFormOptionsAction(): Promise<{ accounts: AccountO
 }
 
 export async function checkImportDuplicatesAction(accountId: string, rows: NormalizedCsvRow[]): Promise<ActionResult<boolean[]>> {
+  if (rows.length > MAX_CSV_IMPORT_ROWS) {
+    return actionError(`El archivo tiene demasiadas filas (máximo ${MAX_CSV_IMPORT_ROWS} por importación).`);
+  }
+
   try {
     const { supabase } = await requireUser();
     const duplicates = await new CsvImportService(supabase).checkDuplicates(accountId, rows);
@@ -51,7 +56,9 @@ export async function confirmCsvImportAction(input: {
   rows: NormalizedCsvRow[];
 }): Promise<ActionResult<ImportSummary>> {
   if (input.rows.length === 0) return actionError("No hay filas para importar.");
-  if (input.rows.length > 2000) return actionError("El archivo tiene demasiadas filas (máximo 2000 por importación).");
+  if (input.rows.length > MAX_CSV_IMPORT_ROWS) {
+    return actionError(`El archivo tiene demasiadas filas (máximo ${MAX_CSV_IMPORT_ROWS} por importación).`);
+  }
 
   try {
     const { supabase, user } = await requireUser();

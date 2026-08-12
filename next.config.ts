@@ -1,38 +1,18 @@
 import type { NextConfig } from "next";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseOrigin = (() => {
-  try {
-    return supabaseUrl ? new URL(supabaseUrl).origin : "";
-  } catch {
-    return "";
-  }
-})();
-
 /**
- * Content-Security-Policy pragmática (§34/§49). `script-src` incluye
- * 'unsafe-inline' porque Next.js inyecta el payload de hidratación como
- * script inline sin nonce en esta configuración — endurecerlo a CSP basada
- * en nonce por request es una mejora de seguridad documentada pendiente
- * (requeriría generar el nonce en middleware y propagarlo a cada <Script>).
- * `connect-src`/`img-src` incluyen el origin de Supabase (auth + datos +
- * avatares futuros); sin URL configurada, la CSP simplemente no agrega ese
- * origin extra.
+ * Content-Security-Policy: NO vive aquí (SECURITY-07) — se genera dinámica,
+ * con nonce por request, en `proxy.ts` (`src/lib/config/csp.ts`). Antes
+ * había una CSP estática acá con `script-src 'unsafe-inline'`, que anulaba
+ * la protección real de CSP contra XSS. Ponerla también aquí duplicaría el
+ * header (dos `Content-Security-Policy` se combinan por intersección según
+ * el spec, lo cual puede romper la política sin avisar) — un solo punto de
+ * verdad, en proxy.ts.
+ *
+ * El resto de headers de seguridad sí son estáticos (no dependen de un
+ * nonce por request) y se quedan acá.
  */
-const CSP_DIRECTIVES = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:" + (supabaseOrigin ? ` ${supabaseOrigin}` : ""),
-  "font-src 'self' data:",
-  "connect-src 'self'" + (supabaseOrigin ? ` ${supabaseOrigin}` : ""),
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
-
 const SECURITY_HEADERS = [
-  { key: "Content-Security-Policy", value: CSP_DIRECTIVES },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

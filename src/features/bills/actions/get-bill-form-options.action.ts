@@ -1,12 +1,14 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAuthenticatedSupabase } from "@/lib/supabase/require-user";
 import { AccountsService } from "@/features/accounts/services/accounts.service";
 import { CategoriesService } from "@/features/categories/services/categories.service";
 import type { AccountOption, CategoryOption } from "@/features/transactions/components/quick-add-transaction-menu";
 
 export async function getBillFormOptionsAction(): Promise<{ accounts: AccountOption[]; categories: CategoryOption[] }> {
-  const supabase = await createSupabaseServerClient();
+  const { supabase, user } = await getAuthenticatedSupabase();
+  if (!user) return { accounts: [], categories: [] };
+
   const [accounts, categories] = await Promise.all([
     new AccountsService(supabase).listAccounts(),
     new CategoriesService(supabase).getCategoriesWithSubcategories(),

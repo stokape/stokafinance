@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 
 export const metadata: Metadata = { title: "Nueva contraseña — STOKA Finance" };
 
-export default function ResetPasswordPage() {
+// SECURITY-07: fuerza render dinámico (ver login/page.tsx).
+export default async function ResetPasswordPage() {
+  await connection();
   return (
     <div className="space-y-5">
       <div className="space-y-1 text-center">

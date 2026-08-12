@@ -1,0 +1,51 @@
+name: CI
+
+# SECURITY-05: gate mínimo antes de que un commit llegue a producción. Antes
+# de este workflow no existía ningún pipeline — cualquier push a `main`
+# llegaba directo a Vercel sin que tsc/eslint/vitest/audit/RLS se
+# verificaran automáticamente (sólo por disciplina manual). Ver auditoría
+# de seguridad, docs/security-audit-*.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: RLS habilitada en todas las tablas (V-15)
+        run: npm run security:check-rls
+
+      - name: Tests unitarios
+        run: npx vitest run
+
+      - name: Dependencias — vulnerabilidades conocidas (alto/crítico)
+        run: npm audit --audit-level=high
+
+      - name: Build de producción
+        run: npm run build
+        env:
+          # Placeholders — el build no necesita un proyecto Supabase real
+          # (patrón ya establecido en este proyecto para verificar el build).
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          NEXT_PUBLIC_APP_URL: https://finance.stoka.pe

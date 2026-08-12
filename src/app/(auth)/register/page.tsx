@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
 export const metadata: Metadata = { title: "Crear cuenta — STOKA Finance" };
 
-export default function RegisterPage() {
+// SECURITY-07: fuerza render dinámico (ver login/page.tsx).
+export default async function RegisterPage() {
+  await connection();
   return (
     <div className="space-y-5">
       <div className="space-y-1 text-center">
