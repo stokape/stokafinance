@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database.types";
-import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
+import { supabaseBrowserCookieOptions } from "@/lib/supabase/cookie-options";
 
 /**
  * Cliente Supabase para Client Components. Usa la anon key — la seguridad
@@ -18,5 +18,5 @@ export function createSupabaseBrowserClient() {
     );
   }
 
-  return createBrowserClient<Database>(url, anonKey, { cookieOptions: supabaseCookieOptions });
+  return createBrowserClient<Database>(url, anonKey, { cookieOptions: supabaseBrowserCookieOptions });
 }
