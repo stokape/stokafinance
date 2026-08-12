@@ -36,6 +36,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example es la plantilla (sin secretos, todos los valores vacíos) —
+# sí debe ir al repo. Encontrado sin trackear nunca por el patrón de arriba.
+!.env.example
 
 # vercel
 .vercel

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-/** Variante "maskable" (con margen de seguridad) para Android adaptive icons. */
+/** Variante "maskable" (con margen de seguridad) para Android adaptive icons — gradiente de marca STOKA Finance. */
 export async function GET() {
   return new ImageResponse(
     (
@@ -11,7 +11,7 @@ export async function GET() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#3730a3",
+          background: "linear-gradient(135deg, #00C8A3 0%, #008F75 100%)",
         }}
       >
         <div

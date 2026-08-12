@@ -3,6 +3,7 @@ import { ImageResponse } from "next/og";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
+/** Gradiente de marca STOKA Finance (#00C8A3 → #008F75). */
 export default function AppleIcon() {
   return new ImageResponse(
     (
@@ -13,7 +14,7 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#3730a3",
+          background: "linear-gradient(135deg, #00C8A3 0%, #008F75 100%)",
           color: "#ffffff",
           fontSize: 96,
           fontWeight: 700,

@@ -5,7 +5,8 @@ export const contentType = "image/png";
 
 /**
  * Ícono generado en build/request time (sin assets externos, costo cero).
- * Next.js expone esto automáticamente como favicon.
+ * Next.js expone esto automáticamente como favicon. Gradiente de marca
+ * (§ paleta STOKA Finance: #00C8A3 → #008F75).
  */
 export default function Icon() {
   return new ImageResponse(
@@ -17,7 +18,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#3730a3",
+          background: "linear-gradient(135deg, #00C8A3 0%, #008F75 100%)",
           borderRadius: 6,
           color: "#ffffff",
           fontSize: 20,
