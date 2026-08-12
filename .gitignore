@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentación interna — no va al repositorio (ver [[docs-internos-no-git]])
+/docs/
+/README.md
