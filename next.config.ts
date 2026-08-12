@@ -41,6 +41,15 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // El caché HMR de Server Components (activo por defecto en dev) cachea
+  // TODAS las respuestas fetch entre refrescos de HMR, incluso con
+  // `cache: 'no-store'` — incluye potencialmente las llamadas que el SDK de
+  // Supabase hace a PostgREST desde Server Components/Actions. Se desactiva
+  // para que las pruebas manuales y E2E en dev siempre vean datos frescos.
+  // Ver node_modules/next/dist/docs/.../serverComponentsHmrCache.md.
+  experimental: {
+    serverComponentsHmrCache: false,
+  },
   async headers() {
     return [
       {
