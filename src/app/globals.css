@@ -187,3 +187,29 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/*
+ * Logo de marca (isotipo real, public/brand/*.jpg): dos <img> superpuestas,
+ * se alterna cuál se muestra según el tema — mismo criterio que el resto del
+ * sistema de temas de este archivo (preferencia del sistema, y la elección
+ * explícita del usuario vía [data-theme] gana en ambas direcciones). Sin
+ * esto habría que montar/desmontar en JS, con el flash/hydration-mismatch
+ * que ya se evitó a propósito en el resto de la app.
+ */
+.brand-logo-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-logo-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .brand-logo-dark {
+    display: block;
+  }
+}
+:root[data-theme="dark"] .brand-logo-light {
+  display: none;
+}
+:root[data-theme="dark"] .brand-logo-dark {
+  display: block;
+}

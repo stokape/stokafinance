@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronsLeft, ChevronsRight, Construction } from "lucide-react";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
-import { LogoMark } from "@/components/brand/logo-mark";
+import { LogoPhoto } from "@/components/brand/logo-photo";
 import { cn } from "@/lib/utils/cn";
 
 /** Sidebar colapsable de escritorio (§5). Oculta en móvil — ver mobile-nav.tsx. */
@@ -21,7 +21,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
-        <LogoMark size={28} />
+        <LogoPhoto size={28} />
         {!collapsed ? (
           <span className="truncate text-sm font-semibold tracking-tight">
             <span className="text-foreground">STOKA</span> <span style={{ color: "#00C8A3" }}>FINANCE</span>
