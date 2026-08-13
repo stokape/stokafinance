@@ -25,6 +25,14 @@ jobs:
 
       - run: npm ci
 
+      - name: Generar tipos de Next (LayoutProps, PageProps, etc.)
+        # next-env.d.ts y .next/types/** están gitignored y se regeneran con
+        # cualquier comando de next — en local ya existen de sesiones previas
+        # de `next dev`, pero en un checkout limpio de CI no, y tsc los
+        # necesita para tipos globales como LayoutProps<"/">. `next typegen`
+        # los genera sin correr un build completo.
+        run: npx next typegen
+
       - name: Typecheck
         run: npx tsc --noEmit
 
