@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 import { ResetDataDialog } from "@/features/settings/components/reset-data-dialog";
+import { DeleteAccountDialog } from "@/features/settings/components/delete-account-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ export default async function SettingsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const hasPasswordIdentity = user.identities?.some((identity) => identity.provider === "email") ?? true;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -118,6 +121,12 @@ export default async function SettingsPage() {
             Borra todos tus datos financieros y empieza de cero, sin perder tu cuenta ni tener que registrarte de nuevo.
           </p>
           <ResetDataDialog />
+          <div className="border-t border-danger/20 pt-3">
+            <p className="mb-3 text-sm text-muted-foreground">
+              O elimina tu cuenta por completo — datos y login. Definitivo, no hay vuelta atrás.
+            </p>
+            <DeleteAccountDialog requiresPassword={hasPasswordIdentity} />
+          </div>
         </CardContent>
       </Card>
     </div>

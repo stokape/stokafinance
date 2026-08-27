@@ -6,7 +6,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label, FieldError } from "@/components/ui/label";
-import { resetMyDataAction, RESET_CONFIRMATION_WORD } from "@/features/settings/actions/danger-zone.actions";
+import { resetMyDataAction } from "@/features/settings/actions/danger-zone.actions";
+import { RESET_CONFIRMATION_WORD } from "@/features/settings/constants";
 import type { ActionResult } from "@/types/action-result";
 
 const initialState: ActionResult = { ok: false, error: "" };

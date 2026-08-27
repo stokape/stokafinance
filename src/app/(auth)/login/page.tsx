@@ -5,7 +5,7 @@ import { LoginForm } from "@/features/auth/components/login-form";
 export const metadata: Metadata = { title: "Iniciar sesión — STOKA Finance" };
 
 interface LoginPageProps {
-  searchParams: Promise<{ error?: string; reason?: string }>;
+  searchParams: Promise<{ error?: string; reason?: string; closed?: string }>;
 }
 
 // SECURITY-07: fuerza render dinámico — la CSP con nonce por request
@@ -13,7 +13,7 @@ interface LoginPageProps {
 // vez en build time (una página estática no tiene nonce que inyectar).
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   await connection();
-  const { error, reason } = await searchParams;
+  const { error, reason, closed } = await searchParams;
 
   return (
     <div className="space-y-5">
@@ -25,6 +25,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="rounded-md border border-danger/30 bg-danger-bg px-3 py-2 text-sm text-danger">
           No pudimos completar el inicio de sesión con ese método.
           {reason ? <span className="block text-xs opacity-80">Detalle: {reason}</span> : null}
+        </div>
+      ) : null}
+      {closed === "success" ? (
+        <div className="rounded-md border border-success/30 bg-success-bg px-3 py-2 text-sm text-success">
+          Tu cuenta se eliminó por completo. Gracias por haber usado STOKA Finance.
         </div>
       ) : null}
       <LoginForm />

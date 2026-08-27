@@ -8,6 +8,12 @@ import type { Database } from "@/types/database.types";
  * Uso permitido ÚNICAMENTE en:
  *  - tareas administrativas server-side sin contexto de usuario (backups,
  *    jobs de mantenimiento, generación de snapshots agregados).
+ *  - `auth.admin.deleteUser(id)` para que un usuario elimine SU PROPIA
+ *    cuenta (Configuración → Zona de peligro): es la única operación que
+ *    ni siquiera el propio usuario puede hacer con su sesión normal (no
+ *    existe un endpoint de "auto-borrado" en la API pública de Auth). El
+ *    `id` usado ahí SIEMPRE sale de `auth.getUser()` de la sesión ya
+ *    verificada en la misma request — nunca de un id que mande el cliente.
  *
  * PROHIBIDO:
  *  - usarlo para servir datos a un usuario (usar siempre
