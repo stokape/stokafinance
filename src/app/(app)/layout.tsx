@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Topbar } from "@/components/layout/topbar";
 import { QuickAddTransactionMenu } from "@/features/transactions/components/quick-add-transaction-menu";
+import { AppLockGate } from "@/features/app-lock/components/app-lock-gate";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServerClient();
@@ -26,17 +27,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col">
-        <Topbar
-          fullName={profile?.full_name ?? null}
-          email={user.email ?? ""}
-          quickAddSlot={<QuickAddTransactionMenu />}
-        />
-        <main className="flex-1 px-4 pb-20 pt-4 md:px-6 md:pb-6">{children}</main>
+    <AppLockGate>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <div className="flex min-h-screen flex-1 flex-col">
+          <Topbar
+            fullName={profile?.full_name ?? null}
+            email={user.email ?? ""}
+            quickAddSlot={<QuickAddTransactionMenu />}
+          />
+          <main className="flex-1 px-4 pb-20 pt-4 md:px-6 md:pb-6">{children}</main>
+        </div>
+        <MobileNav />
       </div>
-      <MobileNav />
-    </div>
+    </AppLockGate>
   );
 }

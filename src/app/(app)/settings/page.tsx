@@ -7,6 +7,7 @@ import { ResetPasswordForm } from "@/features/auth/components/reset-password-for
 import { ResetDataDialog } from "@/features/settings/components/reset-data-dialog";
 import { DeleteAccountDialog } from "@/features/settings/components/delete-account-dialog";
 import { PushNotificationsToggle } from "@/features/push-notifications/components/push-notifications-toggle";
+import { AppLockToggle } from "@/features/app-lock/components/app-lock-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,14 @@ export default async function SettingsPage() {
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Cambia tu contraseña de acceso.</p>
           <ResetPasswordForm />
+
+          <div className="border-t border-border pt-4">
+            <p className="mb-3 text-sm text-muted-foreground">
+              Pide Face ID, huella o Windows Hello antes de mostrar tus finanzas en este dispositivo — útil si compartes el
+              teléfono o la compu. Es local a este navegador, no reemplaza tu contraseña.
+            </p>
+            <AppLockToggle userId={user.id} email={user.email ?? ""} />
+          </div>
         </CardContent>
       </Card>
 
