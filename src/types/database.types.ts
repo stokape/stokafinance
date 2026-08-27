@@ -252,6 +252,65 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["credit_card_installment_plans"]["Row"]>;
         Relationships: [];
       };
+      credit_card_statements: {
+        Row: {
+          id: string;
+          user_id: string;
+          credit_card_id: string;
+          period_start: string;
+          period_end: string;
+          closing_date: string;
+          due_date: string;
+          total_amount: string;
+          minimum_payment: string;
+          paid_amount: string;
+          status: "OPEN" | "CLOSED" | "PAID" | "PARTIALLY_PAID" | "OVERDUE";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["credit_card_statements"]["Row"]> & {
+          user_id: string;
+          credit_card_id: string;
+          period_start: string;
+          period_end: string;
+          closing_date: string;
+          due_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_card_statements"]["Row"]>;
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          entity_type: string;
+          entity_id: string | null;
+          action: "CREATE" | "UPDATE" | "DELETE" | "CANCEL" | "IMPORT" | "RESTORE" | "BACKUP";
+          old_data: Record<string, unknown> | null;
+          new_data: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["audit_logs"]["Row"]> & {
+          entity_type: string;
+          action: Database["public"]["Tables"]["audit_logs"]["Row"]["action"];
+        };
+        Update: Partial<Database["public"]["Tables"]["audit_logs"]["Row"]>;
+        Relationships: [];
+      };
+      whatsapp_connections: {
+        Row: {
+          id: string;
+          user_id: string;
+          phone_number_hash: string;
+          verified: boolean;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["whatsapp_connections"]["Row"]> & { user_id: string; phone_number_hash: string };
+        Update: Partial<Database["public"]["Tables"]["whatsapp_connections"]["Row"]>;
+        Relationships: [];
+      };
       budgets: {
         Row: {
           id: string;
