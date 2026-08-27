@@ -311,6 +311,25 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["whatsapp_connections"]["Row"]>;
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["push_subscriptions"]["Row"]> & {
+          user_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Row"]>;
+        Relationships: [];
+      };
       budgets: {
         Row: {
           id: string;

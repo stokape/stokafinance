@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils/money";
 import { cancelSubscriptionAction } from "@/features/subscriptions/actions/subscriptions.actions";
+import { findCancellationInfo } from "@/features/subscriptions/lib/cancellation-guide";
 import { FREQUENCY_LABELS, type Subscription } from "@/features/subscriptions/types/subscription.types";
 
 export function SubscriptionRow({ subscription }: { subscription: Subscription }) {
   const [isPending, startTransition] = useTransition();
+  const cancellationInfo = findCancellationInfo(subscription.name, subscription.provider);
 
   function handleCancel() {
     if (!confirm(`¿Cancelar la suscripción "${subscription.name}"?`)) return;
@@ -39,6 +41,19 @@ export function SubscriptionRow({ subscription }: { subscription: Subscription }
           {subscription.provider ? ` · ${subscription.provider}` : ""}
           {subscription.categoryName ? ` · ${subscription.categoryName}` : ""} · próximo cobro {subscription.nextPaymentDate}
         </p>
+        {cancellationInfo ? (
+          <p className="text-xs text-muted-foreground">
+            {cancellationInfo.url ? (
+              <a href={cancellationInfo.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+                Cómo cancelar {cancellationInfo.label}
+              </a>
+            ) : (
+              <span>
+                Cómo cancelar {cancellationInfo.label}: {cancellationInfo.note}
+              </span>
+            )}
+          </p>
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm font-semibold">{formatMoney(subscription.amount, subscription.currency)}</span>

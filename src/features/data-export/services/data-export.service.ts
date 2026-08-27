@@ -37,6 +37,7 @@ const OWNED_TABLES = [
   "financial_snapshots",
   "audit_logs",
   "whatsapp_connections",
+  "push_subscriptions",
 ] as const satisfies readonly (keyof Database["public"]["Tables"])[];
 
 export interface DataExport {

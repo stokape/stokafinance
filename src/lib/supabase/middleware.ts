@@ -9,6 +9,10 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  // Vercel Cron llama esto sin cookie de sesión (no es un usuario) — la
+  // propia ruta exige "Authorization: Bearer $CRON_SECRET", más estricto
+  // que una sesión de usuario normal. Ver src/app/api/cron/*/route.ts.
+  "/api/cron",
 ];
 
 function isPublicPath(pathname: string): boolean {

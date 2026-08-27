@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ShieldCheck, CloudUpload, Download, AlertTriangle } from "lucide-react";
+import { ShieldCheck, CloudUpload, Download, AlertTriangle, Bell } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 import { ResetDataDialog } from "@/features/settings/components/reset-data-dialog";
 import { DeleteAccountDialog } from "@/features/settings/components/delete-account-dialog";
+import { PushNotificationsToggle } from "@/features/push-notifications/components/push-notifications-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,22 @@ export default async function SettingsPage() {
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Cambia tu contraseña de acceso.</p>
           <ResetPasswordForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <span className="flex items-center gap-2">
+              <Bell className="h-4 w-4" /> Notificaciones
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Avisos de facturas por vencer y suscripciones a punto de renovarse. Se activan por dispositivo/navegador.
+          </p>
+          <PushNotificationsToggle />
         </CardContent>
       </Card>
 
