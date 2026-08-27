@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ShieldCheck, CloudUpload, Download } from "lucide-react";
+import { ShieldCheck, CloudUpload, Download, AlertTriangle } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
+import { ResetDataDialog } from "@/features/settings/components/reset-data-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,22 @@ export default async function SettingsPage() {
           Cerrar sesión
         </Button>
       </form>
+
+      <Card className="border-danger/30">
+        <CardHeader>
+          <CardTitle>
+            <span className="flex items-center gap-2 text-danger">
+              <AlertTriangle className="h-4 w-4" /> Zona de peligro
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Borra todos tus datos financieros y empieza de cero, sin perder tu cuenta ni tener que registrarte de nuevo.
+          </p>
+          <ResetDataDialog />
+        </CardContent>
+      </Card>
     </div>
   );
 }

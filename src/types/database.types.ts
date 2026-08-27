@@ -649,6 +649,10 @@ export interface Database {
         };
         Returns: boolean;
       };
+      fn_reset_my_data: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
     };
   };
 }
