@@ -33,6 +33,23 @@ export function Dialog({ open, onClose, title, description, children, className 
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const mounted = useMounted();
 
+  // Ref a la última `onClose` en vez de dependencia directa del efecto: si
+  // el caller pasa un `onClose` inline (`() => setOpen(false)`, el patrón
+  // más común), esa función es una referencia NUEVA en cada render del
+  // caller — y cualquier estado que cambie con cada tecla (ej. un input
+  // controlado, como el de "escribe ELIMINAR para confirmar") dispara ese
+  // render en cada letra. Con `onClose` en el array de dependencias, el
+  // efecto se re-ejecutaba en cada tecla y volvía a robarle el foco al
+  // input (restaurándolo a `previouslyFocused` / al panel) — en el
+  // teclado virtual de un celular eso se ve como "el teclado se cierra
+  // cada vez que escribo una letra". Con la ref, el efecto sólo depende de
+  // `open` (abrir/cerrar de verdad), pero Escape y el click en el backdrop
+  // siguen llamando a la versión más reciente de `onClose`.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
 
@@ -40,7 +57,7 @@ export function Dialog({ open, onClose, title, description, children, className 
     panelRef.current?.focus();
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     }
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
@@ -50,7 +67,7 @@ export function Dialog({ open, onClose, title, description, children, className 
       document.body.style.overflow = "";
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
