@@ -71,9 +71,14 @@ export class RecurringTransactionsRepository {
     return rows.map((row) => mapRow(row, accountNames, categoryNames));
   }
 
-  async create(userId: string, input: Omit<Database["public"]["Tables"]["recurring_transactions"]["Insert"], "user_id">): Promise<void> {
-    const { error } = await this.supabase.from("recurring_transactions").insert({ ...input, user_id: userId });
+  async create(userId: string, input: Omit<Database["public"]["Tables"]["recurring_transactions"]["Insert"], "user_id">): Promise<string> {
+    const { data, error } = await this.supabase
+      .from("recurring_transactions")
+      .insert({ ...input, user_id: userId })
+      .select("id")
+      .single();
     if (error) throw error;
+    return data.id;
   }
 
   async updateNextOccurrence(id: string, nextOccurrenceDate: string): Promise<void> {

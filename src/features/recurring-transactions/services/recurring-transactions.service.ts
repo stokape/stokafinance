@@ -80,8 +80,8 @@ export class RecurringTransactionsService {
     return this.repository.list();
   }
 
-  async createRecurring(userId: string, input: CreateRecurringTransactionInput): Promise<void> {
-    await this.repository.create(userId, {
+  async createRecurring(userId: string, input: CreateRecurringTransactionInput): Promise<string> {
+    return this.repository.create(userId, {
       transaction_type: input.transactionType,
       account_id: input.accountId,
       destination_account_id: input.transactionType === "TRANSFER" ? input.destinationAccountId || null : null,

@@ -9,23 +9,30 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Label, FieldError } from "@/components/ui/label";
 import { createSubscriptionAction } from "@/features/subscriptions/actions/subscriptions.actions";
-import { getSubscriptionCategoriesAction } from "@/features/subscriptions/actions/get-subscription-categories.action";
+import { getSubscriptionFormOptionsAction } from "@/features/subscriptions/actions/get-subscription-form-options.action";
 import { useActionFeedback } from "@/hooks/use-action-feedback";
 import { FREQUENCY_LABELS } from "@/features/subscriptions/types/subscription.types";
 import type { ActionResult } from "@/types/action-result";
-import type { CategoryOption } from "@/features/transactions/components/quick-add-transaction-menu";
+import type { AccountOption, CategoryOption } from "@/features/transactions/components/quick-add-transaction-menu";
 
 const initialState: ActionResult = { ok: false, error: "" };
 const today = () => format(new Date(), "yyyy-MM-dd");
 
 export function NewSubscriptionDialog() {
   const [open, setOpen] = useState(false);
+  const [accounts, setAccounts] = useState<AccountOption[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [autoTrack, setAutoTrack] = useState(false);
   const [state, formAction, isPending] = useActionState(createSubscriptionAction, initialState);
   useActionFeedback(state, { successMessage: "Suscripción creada", onSuccess: () => setOpen(false) });
 
   useEffect(() => {
-    if (open && categories.length === 0) getSubscriptionCategoriesAction().then(setCategories);
+    if (open && categories.length === 0) {
+      getSubscriptionFormOptionsAction().then((options) => {
+        setAccounts(options.accounts);
+        setCategories(options.categories);
+      });
+    }
   }, [open, categories.length]);
 
   return (
@@ -37,7 +44,7 @@ export function NewSubscriptionDialog() {
         <form action={formAction} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="sub-name">Nombre</Label>
-            <Input id="sub-name" name="name" required placeholder="Netflix, Spotify, hosting..." />
+            <Input id="sub-name" name="name" required placeholder="Netflix, Spotify, ChatGPT Plus, gimnasio..." />
             <FieldError>{state.ok === false ? state.fieldErrors?.name?.[0] : undefined}</FieldError>
           </div>
 
@@ -71,8 +78,8 @@ export function NewSubscriptionDialog() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="sub-category">Categoría (opcional)</Label>
-            <Select id="sub-category" name="categoryId" defaultValue="">
+            <Label htmlFor="sub-category">Categoría{autoTrack ? "" : " (opcional)"}</Label>
+            <Select id="sub-category" name="categoryId" defaultValue="" required={autoTrack}>
               <option value="">Sin categoría</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -80,6 +87,45 @@ export function NewSubscriptionDialog() {
                 </option>
               ))}
             </Select>
+            <FieldError>{state.ok === false ? state.fieldErrors?.categoryId?.[0] : undefined}</FieldError>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="sub-auto-track"
+              name="autoTrackAsExpense"
+              type="checkbox"
+              value="true"
+              checked={autoTrack}
+              onChange={(e) => setAutoTrack(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="sub-auto-track">Registrar automáticamente como gasto en Transacciones</Label>
+          </div>
+
+          {autoTrack ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="sub-account">Cuenta de cobro</Label>
+              <Select id="sub-account" name="accountId" defaultValue="" required={autoTrack}>
+                <option value="" disabled>
+                  Selecciona una cuenta...
+                </option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </Select>
+              <FieldError>{state.ok === false ? state.fieldErrors?.accountId?.[0] : undefined}</FieldError>
+              <p className="text-xs text-muted-foreground">
+                Cada vez que llegue la fecha de cobro, se registrará el gasto solo — sin que tengas que anotarlo a mano.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="sub-notes">Notas (opcional)</Label>
+            <Input id="sub-notes" name="notes" />
           </div>
 
           {state.ok === false && state.error ? <FieldError>{state.error}</FieldError> : null}

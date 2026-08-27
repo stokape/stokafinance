@@ -382,6 +382,7 @@ export interface Database {
           start_date: string;
           cancellation_date: string | null;
           notes: string | null;
+          recurring_transaction_id: string | null;
           created_at: string;
           updated_at: string;
         };

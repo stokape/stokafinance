@@ -21,6 +21,7 @@ function mapSubscription(row: SubscriptionRow, categoryName: string | null): Sub
     startDate: row.start_date,
     cancellationDate: row.cancellation_date,
     notes: row.notes,
+    recurringTransactionId: row.recurring_transaction_id,
   };
 }
 
@@ -58,8 +59,15 @@ export class SubscriptionsRepository {
     return mapSubscription(data, null);
   }
 
-  async cancel(id: string, cancellationDate: string): Promise<void> {
-    const { error } = await this.supabase.from("subscriptions").update({ active: false, cancellation_date: cancellationDate }).eq("id", id);
+  /** Devuelve el `recurring_transaction_id` vinculado (si había uno) para que el service lo desactive también. */
+  async cancel(id: string, cancellationDate: string): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from("subscriptions")
+      .update({ active: false, cancellation_date: cancellationDate })
+      .eq("id", id)
+      .select("recurring_transaction_id")
+      .single();
     if (error) throw error;
+    return data.recurring_transaction_id;
   }
 }
