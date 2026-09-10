@@ -20,6 +20,7 @@ function mapLoan(row: LoanRow): Loan {
     estimatedEndDate: row.estimated_end_date,
     currency: row.currency,
     status: row.status,
+    paymentType: row.payment_type,
     createdAt: row.created_at,
   };
 }

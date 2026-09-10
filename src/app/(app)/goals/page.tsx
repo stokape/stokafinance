@@ -10,7 +10,16 @@ export const metadata: Metadata = { title: "Metas" };
 
 export default async function GoalsPage() {
   const supabase = await createSupabaseServerClient();
-  const goals = await new GoalsService(supabase).listGoals();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const goalsService = new GoalsService(supabase);
+  // Genera los aportes automáticos vencidos (juntas quincenales/mensuales,
+  // etc.) antes de listar — mismo patrón "catch-up al abrir la página" que
+  // recurrentes, sin cron. Ver GoalsService.catchUpContributions.
+  if (user) await goalsService.catchUpContributions(user.id);
+  const goals = await goalsService.listGoals();
 
   return (
     <div className="space-y-6">

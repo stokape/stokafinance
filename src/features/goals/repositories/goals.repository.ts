@@ -16,6 +16,11 @@ function mapGoal(row: GoalRow): Goal {
     priority: row.priority,
     status: row.status,
     currency: row.currency,
+    contributionAmount: row.contribution_amount,
+    contributionFrequency: row.contribution_frequency,
+    contributionAccountId: row.contribution_account_id,
+    contributionCategoryId: row.contribution_category_id,
+    nextContributionDate: row.next_contribution_date,
   };
 }
 
@@ -72,6 +77,24 @@ export class GoalsRepository {
 
   async updateStatus(id: string, status: Goal["status"]): Promise<void> {
     const { error } = await this.supabase.from("financial_goals").update({ status }).eq("id", id);
+    if (error) throw error;
+  }
+
+  /** Metas activas con aporte automático configurado y vencido (para el catch-up). */
+  async listDueForContribution(userId: string, todayIso: string): Promise<Goal[]> {
+    const { data, error } = await this.supabase
+      .from("financial_goals")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "ACTIVE")
+      .not("contribution_amount", "is", null)
+      .lte("next_contribution_date", todayIso);
+    if (error) throw error;
+    return (data ?? []).map(mapGoal);
+  }
+
+  async updateNextContributionDate(id: string, nextContributionDate: string): Promise<void> {
+    const { error } = await this.supabase.from("financial_goals").update({ next_contribution_date: nextContributionDate }).eq("id", id);
     if (error) throw error;
   }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TransactionsService } from "@/features/transactions/services/transactions.service";
+import { RecurringTransactionsService } from "@/features/recurring-transactions/services/recurring-transactions.service";
 import {
   createExpenseSchema,
   createIncomeSchema,
@@ -33,7 +34,29 @@ export async function createExpenseAction(_prevState: unknown, formData: FormDat
   }
   try {
     const { supabase, user } = await requireUser();
-    await new TransactionsService(supabase).createExpense(user.id, parsed.data);
+
+    if (parsed.data.isRecurring && parsed.data.frequency) {
+      // Mismo mecanismo que ya usan suscripciones/facturas recurrentes:
+      // crea el pago recurrente (recurring_transactions) en vez de una
+      // transacción única — se registrará solo, cada ciclo, sin que el
+      // usuario tenga que volver a anotarlo (ver
+      // RecurringTransactionsService.listAndCatchUp).
+      await new RecurringTransactionsService(supabase).createRecurring(user.id, {
+        transactionType: "EXPENSE",
+        accountId: parsed.data.accountId,
+        destinationAccountId: "",
+        categoryId: parsed.data.categoryId,
+        description: parsed.data.description,
+        amount: parsed.data.amount,
+        frequency: parsed.data.frequency,
+        startDate: parsed.data.transactionDate,
+        endDate: parsed.data.endDate || "",
+        notes: parsed.data.notes || "",
+      });
+    } else {
+      await new TransactionsService(supabase).createExpense(user.id, parsed.data);
+    }
+
     revalidateAfterMutation();
     return actionSuccess(undefined);
   } catch (error) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateAmortizationSchedule } from "./amortization";
+import { generateAmortizationSchedule, generateInterestOnlySchedule } from "./amortization";
 import { sumMoney } from "@/lib/utils/money";
 
 describe("generateAmortizationSchedule", () => {
@@ -42,5 +42,52 @@ describe("generateAmortizationSchedule", () => {
 
   it("devuelve un arreglo vacío si el número de cuotas es 0 o negativo", () => {
     expect(generateAmortizationSchedule("1000", 10, 0, "2026-01-01")).toEqual([]);
+  });
+
+  it("con un monto de cuota manual y sin tasa, paga la cuota fija y la última absorbe el resto", () => {
+    // 1200 / 350 por cuota: 3 cuotas de 350 (=1050) + 1 cuota final de 150 (1200-1050).
+    // "0" y no "" — el caller real (LoansService) ya normaliza el rate vacío a "0"
+    // antes de llamar acá; la función en sí exige un Decimal parseable.
+    const schedule = generateAmortizationSchedule("1200", "0", 4, "2026-01-01", "350");
+    expect(schedule.map((i) => i.totalPayment.toString())).toEqual(["350", "350", "350", "150"]);
+    expect(schedule.every((i) => i.interest.toString() === "0")).toBe(true);
+    const totalPrincipal = sumMoney(schedule.map((i) => i.principal));
+    expect(totalPrincipal.toString()).toBe("1200");
+  });
+
+  it("un monto de cuota manual con tasa sigue calculando interés sobre saldo insoluto", () => {
+    const schedule = generateAmortizationSchedule("10000", 24, 12, "2026-01-01", "1000");
+    expect(schedule[0].totalPayment.toString()).toBe("1000");
+    expect(schedule[0].interest.greaterThan(0)).toBe(true);
+    expect(schedule[schedule.length - 1].remainingBalance.toString()).toBe("0");
+  });
+});
+
+describe("generateInterestOnlySchedule", () => {
+  it("cada cuota es sólo interés y la última agrega el capital completo", () => {
+    // 3000 al 24% anual = 2%/mes → 60/mes de interés.
+    const schedule = generateInterestOnlySchedule("3000", 24, 3, "2026-01-01");
+    expect(schedule.map((i) => i.interest.toString())).toEqual(["60", "60", "60"]);
+    expect(schedule.map((i) => i.principal.toString())).toEqual(["0", "0", "3000"]);
+    expect(schedule[2].totalPayment.toString()).toBe("3060");
+    expect(schedule[2].remainingBalance.toString()).toBe("0");
+  });
+
+  it("el saldo se mantiene constante (no baja) hasta la última cuota", () => {
+    const schedule = generateInterestOnlySchedule("5000", 12, 4, "2026-01-01");
+    expect(schedule[0].remainingBalance.toString()).toBe("5000");
+    expect(schedule[1].remainingBalance.toString()).toBe("5000");
+    expect(schedule[2].remainingBalance.toString()).toBe("5000");
+    expect(schedule[3].remainingBalance.toString()).toBe("0");
+  });
+
+  it("con un monto de interés manual, lo usa tal cual sin necesitar una tasa", () => {
+    const schedule = generateInterestOnlySchedule("2000", "", 2, "2026-01-01", "50");
+    expect(schedule.map((i) => i.interest.toString())).toEqual(["50", "50"]);
+    expect(schedule[1].totalPayment.toString()).toBe("2050");
+  });
+
+  it("devuelve un arreglo vacío si el número de cuotas es 0 o negativo", () => {
+    expect(generateInterestOnlySchedule("1000", 10, 0, "2026-01-01")).toEqual([]);
   });
 });

@@ -14,6 +14,14 @@ export const createLoanSchema = z.object({
   numberOfInstallments: z.coerce.number().int().min(1).max(360),
   startDate: isoDateSchema,
   currency: currencyCodeSchema.default("PEN"),
+  // PRINCIPAL_AND_INTEREST (default, sistema francés) o INTEREST_ONLY
+  // (cada cuota es sólo interés, capital completo al final — típico de
+  // préstamos informales/familiares).
+  paymentType: z.enum(["PRINCIPAL_AND_INTEREST", "INTEREST_ONLY"]).default("PRINCIPAL_AND_INTEREST"),
+  // Si el usuario ya sabe cuánto paga cada cuota (monto fijo acordado, sin
+  // necesidad de declarar una tasa formal), lo escribe acá y se usa tal
+  // cual en vez de calcularlo desde interestRate.
+  installmentAmount: moneyAmountSchema().optional().or(z.literal("")),
 });
 export type CreateLoanInput = z.infer<typeof createLoanSchema>;
 

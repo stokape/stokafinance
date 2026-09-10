@@ -380,6 +380,7 @@ export interface Database {
           currency: string;
           disbursement_account_id: string | null;
           status: "ACTIVE" | "PAID_OFF" | "DEFAULTED" | "CANCELLED";
+          payment_type: "PRINCIPAL_AND_INTEREST" | "INTEREST_ONLY";
           created_at: string;
           updated_at: string;
         };
@@ -485,6 +486,11 @@ export interface Database {
           priority: "LOW" | "MEDIUM" | "HIGH";
           status: "ACTIVE" | "COMPLETED" | "CANCELLED";
           currency: string;
+          contribution_amount: string | null;
+          contribution_frequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "QUARTERLY" | "SEMIANNUAL" | "ANNUAL" | null;
+          contribution_account_id: string | null;
+          contribution_category_id: string | null;
+          next_contribution_date: string | null;
           created_at: string;
           updated_at: string;
         };

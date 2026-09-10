@@ -19,6 +19,8 @@ async function requireUser() {
 function revalidateAfterMutation() {
   revalidatePath("/goals");
   revalidatePath("/dashboard");
+  revalidatePath("/accounts");
+  revalidatePath("/transactions");
 }
 
 export async function createGoalAction(_prevState: unknown, formData: FormData): Promise<ActionResult> {

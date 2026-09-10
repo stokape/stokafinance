@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { LoansRepository } from "../repositories/loans.repository";
 import { TransactionIntakeService } from "@/features/transactions/services/transaction-intake.service";
-import { generateAmortizationSchedule } from "@/lib/financial-engine";
+import { generateAmortizationSchedule, generateInterestOnlySchedule } from "@/lib/financial-engine";
 import type { CreateLoanInput } from "../validations/loan.schema";
 import type { LoanInstallment, LoanWithProgress } from "../types/loan.types";
 
@@ -40,7 +40,11 @@ export class LoansService {
    */
   async createLoan(userId: string, input: CreateLoanInput): Promise<string> {
     const interestRate = input.interestRate || "0";
-    const schedule = generateAmortizationSchedule(input.originalAmount, interestRate, input.numberOfInstallments, input.startDate);
+    const manualAmount = input.installmentAmount || undefined;
+    const schedule =
+      input.paymentType === "INTEREST_ONLY"
+        ? generateInterestOnlySchedule(input.originalAmount, interestRate, input.numberOfInstallments, input.startDate, manualAmount)
+        : generateAmortizationSchedule(input.originalAmount, interestRate, input.numberOfInstallments, input.startDate, manualAmount);
 
     if (schedule.length === 0) throw new Error("LOAN_INVALID_SCHEDULE");
 
@@ -56,6 +60,7 @@ export class LoansService {
       estimated_end_date: schedule[schedule.length - 1].dueDate,
       currency: input.currency,
       status: "ACTIVE",
+      payment_type: input.paymentType,
     });
 
     await this.repository.createInstallments(

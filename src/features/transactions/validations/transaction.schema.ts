@@ -2,17 +2,33 @@ import { z } from "zod";
 import { currencyCodeSchema, isoDateSchema, moneyAmountSchema } from "@/lib/validations/money.schema";
 import { requiredUuidSchema } from "@/lib/validations/select.schema";
 
-export const createExpenseSchema = z.object({
-  accountId: requiredUuidSchema("Selecciona una cuenta"),
-  categoryId: requiredUuidSchema("Selecciona una categoría"),
-  subcategoryId: z.string().uuid().optional().or(z.literal("")),
-  amount: moneyAmountSchema(),
-  currency: currencyCodeSchema.default("PEN"),
-  transactionDate: isoDateSchema,
-  description: z.string().trim().min(1, "Describe el gasto").max(200),
-  merchant: z.string().trim().max(120).optional().or(z.literal("")),
-  notes: z.string().trim().max(500).optional().or(z.literal("")),
-});
+const RECURRING_FREQUENCY_VALUES = ["WEEKLY", "BIWEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"] as const;
+
+export const createExpenseSchema = z
+  .object({
+    accountId: requiredUuidSchema("Selecciona una cuenta"),
+    categoryId: requiredUuidSchema("Selecciona una categoría"),
+    subcategoryId: z.string().uuid().optional().or(z.literal("")),
+    amount: moneyAmountSchema(),
+    currency: currencyCodeSchema.default("PEN"),
+    transactionDate: isoDateSchema,
+    description: z.string().trim().min(1, "Describe el gasto").max(200),
+    merchant: z.string().trim().max(120).optional().or(z.literal("")),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
+    // Checkbox: "on" cuando está marcado, ausente (undefined) si no. Cuando
+    // está marcado, este gasto no se registra una sola vez: se crea como
+    // recurring_transactions (ver RecurringTransactionsService) y se
+    // registrará solo cada ciclo — mismo mecanismo que ya usan
+    // suscripciones y facturas recurrentes, ahora accesible desde el mismo
+    // formulario de "Nuevo movimiento" en vez de una pantalla aparte.
+    isRecurring: z.string().optional(),
+    frequency: z.enum(RECURRING_FREQUENCY_VALUES).optional(),
+    endDate: isoDateSchema.optional().or(z.literal("")),
+  })
+  .refine((data) => !data.isRecurring || !!data.frequency, {
+    message: "Selecciona la frecuencia",
+    path: ["frequency"],
+  });
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 
 export const createIncomeSchema = z.object({

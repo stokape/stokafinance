@@ -14,6 +14,7 @@ import {
   createIncomeAction,
   createTransferAction,
 } from "@/features/transactions/actions/transactions.actions";
+import { RECURRING_FREQUENCY_LABELS } from "@/features/recurring-transactions/types/recurring-transaction.types";
 import type { ActionResult } from "@/types/action-result";
 import type { AccountOption, CategoryOption } from "./quick-add-transaction-menu";
 
@@ -91,7 +92,11 @@ function TransactionFormTabs({
 
 function ExpenseForm({ accounts, categories, onDone }: { accounts: AccountOption[]; categories: CategoryOption[]; onDone: () => void }) {
   const [state, formAction, isPending] = useActionState(createExpenseAction, initialState);
-  useActionFeedback(state, { successMessage: "Gasto registrado", onSuccess: onDone });
+  const [isRecurring, setIsRecurring] = useState(false);
+  useActionFeedback(state, {
+    successMessage: isRecurring ? "Pago recurrente creado" : "Gasto registrado",
+    onSuccess: onDone,
+  });
   const expenseCategories = categories.filter((c) => c.categoryType === "EXPENSE");
 
   return (
@@ -103,7 +108,7 @@ function ExpenseForm({ accounts, categories, onDone }: { accounts: AccountOption
           <FieldError>{state.ok === false ? state.fieldErrors?.amount?.[0] : undefined}</FieldError>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="exp-date">Fecha</Label>
+          <Label htmlFor="exp-date">{isRecurring ? "Primer cobro" : "Fecha"}</Label>
           <Input id="exp-date" name="transactionDate" type="date" defaultValue={today()} required />
         </div>
       </div>
@@ -149,10 +154,42 @@ function ExpenseForm({ accounts, categories, onDone }: { accounts: AccountOption
         <Input id="exp-merchant" name="merchant" />
       </div>
 
+      <div className="flex items-center gap-2">
+        <input
+          id="exp-recurring"
+          name="isRecurring"
+          type="checkbox"
+          value="true"
+          checked={isRecurring}
+          onChange={(e) => setIsRecurring(e.target.checked)}
+          className="h-4 w-4 rounded border-input"
+        />
+        <Label htmlFor="exp-recurring">Es un pago recurrente (junta, préstamo, plataforma, servicio...)</Label>
+      </div>
+
+      {isRecurring ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="exp-frequency">Frecuencia</Label>
+            <Select id="exp-frequency" name="frequency" defaultValue="MONTHLY" required={isRecurring}>
+              {Object.entries(RECURRING_FREQUENCY_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="exp-end-date">Termina el (opcional)</Label>
+            <Input id="exp-end-date" name="endDate" type="date" />
+          </div>
+        </div>
+      ) : null}
+
       {state.ok === false && state.error ? <FieldError>{state.error}</FieldError> : null}
 
       <Button type="submit" className="w-full" isLoading={isPending}>
-        Registrar gasto
+        {isRecurring ? "Crear pago recurrente" : "Registrar gasto"}
       </Button>
     </form>
   );

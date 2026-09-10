@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MoreVertical, XCircle, PlusCircle } from "lucide-react";
+import { MoreVertical, XCircle, PlusCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,17 @@ export function GoalCard({ goal }: { goal: GoalWithProgress }) {
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{goal.name}</p>
+            <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+              {goal.name}
+              {goal.contributionAmount ? (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground"
+                  title="Tiene aporte automático configurado"
+                >
+                  <RefreshCw className="h-2.5 w-2.5" /> auto
+                </span>
+              ) : null}
+            </p>
             <p className="text-xs text-muted-foreground">
               Prioridad {GOAL_PRIORITY_LABELS[goal.priority]}
               {goal.targetDate ? ` · Meta: ${goal.targetDate}` : ""}

@@ -1,3 +1,5 @@
+export type LoanPaymentType = "PRINCIPAL_AND_INTEREST" | "INTEREST_ONLY";
+
 export interface Loan {
   id: string;
   userId: string;
@@ -12,8 +14,14 @@ export interface Loan {
   estimatedEndDate: string | null;
   currency: string;
   status: "ACTIVE" | "PAID_OFF" | "DEFAULTED" | "CANCELLED";
+  paymentType: LoanPaymentType;
   createdAt: string;
 }
+
+export const LOAN_PAYMENT_TYPE_LABELS: Record<LoanPaymentType, string> = {
+  PRINCIPAL_AND_INTEREST: "Cuota fija (capital + interés)",
+  INTEREST_ONLY: "Solo interés (capital al final)",
+};
 
 export interface LoanWithProgress extends Loan {
   currentBalance: string;
