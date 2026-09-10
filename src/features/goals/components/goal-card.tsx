@@ -88,6 +88,10 @@ export function GoalCard({ goal }: { goal: GoalWithProgress }) {
           <p className="text-xs text-muted-foreground">{clamped.toFixed(0)}% alcanzado</p>
         </div>
 
+        {!isComplete && goal.estimatedCompletionDate ? (
+          <p className="text-xs text-muted-foreground">A tu ritmo actual, llegas el {goal.estimatedCompletionDate}</p>
+        ) : null}
+
         {!isComplete && Number(goal.amountRemaining) > 0 ? (
           <p className="text-xs text-muted-foreground">
             Faltan {formatMoney(goal.amountRemaining, goal.currency)}

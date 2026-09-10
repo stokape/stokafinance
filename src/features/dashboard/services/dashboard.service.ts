@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { addDays, formatISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { addDays, differenceInCalendarMonths, formatISO, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import type { Database } from "@/types/database.types";
 import { AccountsService } from "@/features/accounts/services/accounts.service";
 import { CategoriesService } from "@/features/categories/services/categories.service";
@@ -10,6 +10,8 @@ import { LoansService } from "@/features/loans/services/loans.service";
 import { BillsService } from "@/features/bills/services/bills.service";
 import type { BillWithUrgency } from "@/features/bills/types/bill.types";
 import { ForecastService } from "@/features/forecast/services/forecast.service";
+import { GoalsService } from "@/features/goals/services/goals.service";
+import { SubscriptionsService } from "@/features/subscriptions/services/subscriptions.service";
 import {
   calculateMonthlyCashFlow,
   calculateSavings,
@@ -22,7 +24,10 @@ import {
   calculateAvailableToSpend,
   generateFinancialHealthScore,
   generateAlerts,
+  contributionToMonthlyPace,
+  estimateGoalCompletionDate,
   type Alert,
+  type GoalSubscriptionSuggestion,
 } from "@/lib/financial-engine";
 import { sumMoney } from "@/lib/utils/money";
 import type { TransactionListItem } from "@/features/transactions/types/transaction.types";
@@ -87,17 +92,22 @@ export class DashboardService {
     const budgetsService = new BudgetsService(this.supabase);
     const loansService = new LoansService(this.supabase);
     const billsService = new BillsService(this.supabase);
+    const goalsService = new GoalsService(this.supabase);
+    const subscriptionsService = new SubscriptionsService(this.supabase);
 
-    const [accounts, categories, transactions, recent, creditCards, budgetOverview, loans, upcomingBills] = await Promise.all([
-      accountsService.listAccounts(),
-      categoriesService.getCategoriesWithSubcategories(),
-      transactionsService.listForEngine(dateOnly(twelveMonthsAgoStart), dateOnly(currentMonthEnd)),
-      transactionsService.listTransactions({ page: 1, pageSize: 8 }),
-      creditCardsService.listCards(),
-      budgetsService.getOverview(referenceDate.getFullYear(), referenceDate.getMonth() + 1),
-      loansService.listLoans(),
-      billsService.listUpcoming(30),
-    ]);
+    const [accounts, categories, transactions, recent, creditCards, budgetOverview, loans, upcomingBills, goals, subscriptionsOverview] =
+      await Promise.all([
+        accountsService.listAccounts(),
+        categoriesService.getCategoriesWithSubcategories(),
+        transactionsService.listForEngine(dateOnly(twelveMonthsAgoStart), dateOnly(currentMonthEnd)),
+        transactionsService.listTransactions({ page: 1, pageSize: 8 }),
+        creditCardsService.listCards(),
+        budgetsService.getOverview(referenceDate.getFullYear(), referenceDate.getMonth() + 1),
+        loansService.listLoans(),
+        billsService.listUpcoming(30),
+        goalsService.listGoals(),
+        subscriptionsService.getOverview(),
+      ]);
 
     const totalBalance = sumMoney(accounts.map((a) => a.currentBalance));
     const totalCardDebt = sumMoney(creditCards.map((c) => c.currentDebt));
@@ -214,6 +224,45 @@ export class DashboardService {
 
     const forecast = await new ForecastService(this.supabase).getForecast(30);
 
+    // "Cancela [suscripción] y llegas antes a [meta]" (§ regla determinística,
+    // no IA — ver alerts.ts): de las metas con ritmo de ahorro conocido
+    // (aporte automático configurado), toma la que llegaría más pronto, y
+    // ve si sumarle la suscripción activa más cara adelanta la fecha en al
+    // menos 1 mes. Si no hay ninguna combinación que valga la pena, no se
+    // sugiere nada — mejor callado que una sugerencia que no cambia nada real.
+    const today = dateOnly(referenceDate);
+    const projectableGoals = goals
+      .filter((g) => g.status === "ACTIVE" && g.estimatedCompletionDate && g.contributionAmount && g.contributionFrequency)
+      .sort((a, b) => (a.estimatedCompletionDate! < b.estimatedCompletionDate! ? -1 : 1));
+    const mostExpensiveSubscription = subscriptionsOverview.subscriptions
+      .filter((s) => s.active)
+      .map((s) => ({ ...s, monthlyEquivalent: contributionToMonthlyPace(s.amount, s.frequency) }))
+      .sort((a, b) => b.monthlyEquivalent.minus(a.monthlyEquivalent).toNumber())[0];
+
+    let goalSubscriptionSuggestion: GoalSubscriptionSuggestion | null = null;
+    const nearestGoal = projectableGoals[0];
+    if (nearestGoal && mostExpensiveSubscription) {
+      const currentPace = contributionToMonthlyPace(nearestGoal.contributionAmount!, nearestGoal.contributionFrequency!);
+      const boostedPace = currentPace.plus(mostExpensiveSubscription.monthlyEquivalent);
+      const boostedDate = estimateGoalCompletionDate(nearestGoal.amountRemaining, boostedPace, today);
+      if (boostedDate) {
+        const monthsSaved = differenceInCalendarMonths(parseISO(nearestGoal.estimatedCompletionDate!), parseISO(boostedDate));
+        if (monthsSaved >= 1) {
+          goalSubscriptionSuggestion = {
+            goalName: nearestGoal.name,
+            subscriptionName: mostExpensiveSubscription.name,
+            monthlySavingsAmount: mostExpensiveSubscription.monthlyEquivalent.toString(),
+            monthsSaved,
+          };
+        }
+      }
+    }
+
+    // Meta de ahorro sugerida: 20% de los ingresos es la regla general más
+    // común en finanzas personales (ej. 50/30/20) — punto de partida
+    // razonable mientras no exista un % que el propio usuario configure.
+    const SAVINGS_RATE_TARGET_PERCENTAGE = 20;
+
     const alerts = generateAlerts({
       categorySpending,
       creditCardUtilizations: creditCards.map((c) => ({
@@ -226,6 +275,8 @@ export class DashboardService {
       budgetOverages: budgetOverview.categories.filter((c) => c.status === "EXCEEDED").map((c) => ({ categoryName: c.categoryName, percentageUsed: c.percentageUsed })),
       currentSavingsRate: savingsRate.toNumber(),
       previousSavingsRate: previousSavingsRate.toNumber(),
+      savingsRateTarget: { targetPercentage: SAVINGS_RATE_TARGET_PERCENTAGE, monthlyIncome: currentRange.income.toString() },
+      goalSubscriptionSuggestion,
     });
 
     return {

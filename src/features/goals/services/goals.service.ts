@@ -3,7 +3,7 @@ import { addMonths, addWeeks, addYears, formatISO } from "date-fns";
 import type { Database } from "@/types/database.types";
 import { GoalsRepository } from "../repositories/goals.repository";
 import { TransactionIntakeService } from "@/features/transactions/services/transaction-intake.service";
-import { calculateGoalProgress, calculateRequiredMonthlyContribution } from "@/lib/financial-engine";
+import { calculateGoalProgress, calculateRequiredMonthlyContribution, contributionToMonthlyPace, estimateGoalCompletionDate } from "@/lib/financial-engine";
 import type { AddContributionInput, CreateGoalInput } from "../validations/goal.schema";
 import type { Goal, GoalContribution, GoalContributionFrequency, GoalWithProgress } from "../types/goal.types";
 
@@ -32,12 +32,23 @@ function withProgress({ goal, currentAmount }: { goal: Goal; currentAmount: stri
   const today = formatISO(new Date(), { representation: "date" });
   const requiredMonthlyContribution = calculateRequiredMonthlyContribution(progress.amountRemaining, goal.targetDate, today);
 
+  // "A tu ritmo actual, llegas el...": sólo se puede proyectar con un ritmo
+  // conocido y confiable — el aporte automático configurado (contribution_
+  // amount/frequency). Sin eso, no se inventa un ritmo desde el historial
+  // manual (muy irregular como para proyectar con confianza) — mejor no
+  // mostrar nada que mostrar una fecha poco confiable.
+  const estimatedCompletionDate =
+    goal.contributionAmount && goal.contributionFrequency
+      ? estimateGoalCompletionDate(progress.amountRemaining, contributionToMonthlyPace(goal.contributionAmount, goal.contributionFrequency), today)
+      : null;
+
   return {
     ...goal,
     currentAmount,
     percentageComplete: progress.percentageComplete.toNumber(),
     amountRemaining: progress.amountRemaining.toString(),
     requiredMonthlyContribution: requiredMonthlyContribution.toString(),
+    estimatedCompletionDate,
   };
 }
 

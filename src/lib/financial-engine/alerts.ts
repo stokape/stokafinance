@@ -32,6 +32,18 @@ export interface BudgetOverageInput {
   percentageUsed: number;
 }
 
+export interface SavingsRateTargetInput {
+  targetPercentage: number;
+  monthlyIncome: string | number;
+}
+
+export interface GoalSubscriptionSuggestion {
+  goalName: string;
+  subscriptionName: string;
+  monthlySavingsAmount: string | number;
+  monthsSaved: number;
+}
+
 export interface AlertsInput {
   categorySpending: CategorySpendingComparison[];
   creditCardUtilizations: CreditCardUtilizationInput[];
@@ -40,6 +52,10 @@ export interface AlertsInput {
   budgetOverages: BudgetOverageInput[];
   currentSavingsRate: number;
   previousSavingsRate: number;
+  /** Regla determinística, no IA (§26): si tu tasa de ahorro está por debajo de una meta % (ej. 20%), cuánto más ahorrarías al llegar a ella. */
+  savingsRateTarget?: SavingsRateTargetInput | null;
+  /** Precalculado por el caller (cruza Metas + Suscripciones, fuera del alcance de este motor de reglas puro). */
+  goalSubscriptionSuggestion?: GoalSubscriptionSuggestion | null;
 }
 
 /** Umbral por defecto: un aumento de gasto se alerta desde +20% vs. el promedio de 3 meses. */
@@ -103,6 +119,30 @@ export function generateAlerts(input: AlertsInput): Alert[] {
       id: "savings-rate-drop",
       severity: "info",
       message: "Tu tasa de ahorro cayó respecto al mes anterior.",
+    });
+  }
+
+  if (input.savingsRateTarget && input.currentSavingsRate < input.savingsRateTarget.targetPercentage) {
+    const income = toMoney(input.savingsRateTarget.monthlyIncome);
+    if (income.greaterThan(0)) {
+      const gapPercentage = input.savingsRateTarget.targetPercentage - input.currentSavingsRate;
+      const additionalSavings = income.times(gapPercentage).dividedBy(100);
+      if (additionalSavings.greaterThan(0)) {
+        alerts.push({
+          id: "savings-target-gap",
+          severity: "info",
+          message: `Estás ahorrando ${Math.max(input.currentSavingsRate, 0).toFixed(0)}% de tus ingresos. Si llegas al ${input.savingsRateTarget.targetPercentage}%, ahorrarías ${formatMoney(additionalSavings)} más al mes.`,
+        });
+      }
+    }
+  }
+
+  if (input.goalSubscriptionSuggestion) {
+    const s = input.goalSubscriptionSuggestion;
+    alerts.push({
+      id: "goal-subscription-suggestion",
+      severity: "info",
+      message: `Si cancelas "${s.subscriptionName}" (${formatMoney(s.monthlySavingsAmount)}/mes) y lo destinas a "${s.goalName}", llegarías ${s.monthsSaved} ${s.monthsSaved === 1 ? "mes" : "meses"} antes.`,
     });
   }
 

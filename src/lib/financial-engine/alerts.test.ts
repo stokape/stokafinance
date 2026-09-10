@@ -81,4 +81,39 @@ describe("generateAlerts (§26 — reglas determinísticas)", () => {
   it("sin nada que alertar, devuelve un arreglo vacío", () => {
     expect(generateAlerts(baseInput())).toEqual([]);
   });
+
+  it("alerta cuánto más ahorrarías si llegas a tu % objetivo de ahorro", () => {
+    const alerts = generateAlerts(
+      baseInput({ currentSavingsRate: 10, savingsRateTarget: { targetPercentage: 20, monthlyIncome: "3000" } }),
+    );
+    expect(alerts.some((a) => a.id === "savings-target-gap")).toBe(true);
+    // 10 puntos de brecha * 3000 / 100 = 300 adicionales al mes.
+    expect(alerts.find((a) => a.id === "savings-target-gap")?.message).toContain("300");
+  });
+
+  it("no alerta la meta de ahorro si ya la superaste", () => {
+    const alerts = generateAlerts(
+      baseInput({ currentSavingsRate: 25, savingsRateTarget: { targetPercentage: 20, monthlyIncome: "3000" } }),
+    );
+    expect(alerts.some((a) => a.id === "savings-target-gap")).toBe(false);
+  });
+
+  it("no alerta la meta de ahorro sin ingreso mensual (no se puede convertir el % a monto)", () => {
+    const alerts = generateAlerts(
+      baseInput({ currentSavingsRate: 10, savingsRateTarget: { targetPercentage: 20, monthlyIncome: "0" } }),
+    );
+    expect(alerts.some((a) => a.id === "savings-target-gap")).toBe(false);
+  });
+
+  it("sugiere cancelar una suscripción para llegar antes a una meta, si viene precalculado", () => {
+    const alerts = generateAlerts(
+      baseInput({
+        goalSubscriptionSuggestion: { goalName: "Viaje", subscriptionName: "Netflix", monthlySavingsAmount: "45", monthsSaved: 2 },
+      }),
+    );
+    const alert = alerts.find((a) => a.id === "goal-subscription-suggestion");
+    expect(alert?.message).toContain("Netflix");
+    expect(alert?.message).toContain("Viaje");
+    expect(alert?.message).toContain("2 meses");
+  });
 });

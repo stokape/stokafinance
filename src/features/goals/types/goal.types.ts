@@ -25,6 +25,8 @@ export interface GoalWithProgress extends Goal {
   percentageComplete: number;
   amountRemaining: string;
   requiredMonthlyContribution: string;
+  /** "A tu ritmo actual, llegas el..." — sólo con aporte automático configurado; null si no hay ritmo con qué proyectar. */
+  estimatedCompletionDate: string | null;
 }
 
 export interface GoalContribution {
