@@ -41,7 +41,8 @@ export async function createExpenseAction(_prevState: unknown, formData: FormDat
       // transacción única — se registrará solo, cada ciclo, sin que el
       // usuario tenga que volver a anotarlo (ver
       // RecurringTransactionsService.listAndCatchUp).
-      await new RecurringTransactionsService(supabase).createRecurring(user.id, {
+      const recurringService = new RecurringTransactionsService(supabase);
+      await recurringService.createRecurring(user.id, {
         transactionType: "EXPENSE",
         accountId: parsed.data.accountId,
         destinationAccountId: "",
@@ -53,6 +54,11 @@ export async function createExpenseAction(_prevState: unknown, formData: FormDat
         endDate: parsed.data.endDate || "",
         notes: parsed.data.notes || "",
       });
+      // Si la fecha de pago elegida es hoy o ya pasó, el gasto ya es un
+      // déficit real y debe reflejarse en el saldo de inmediato — no basta
+      // con dejarlo en recurring_transactions a la espera de que alguien
+      // visite /transactions (única pantalla que hoy dispara el catch-up).
+      await recurringService.listAndCatchUp(user.id);
     } else {
       await new TransactionsService(supabase).createExpense(user.id, parsed.data);
     }
