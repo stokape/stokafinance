@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { LoginForm } from "@/features/auth/components/login-form";
 
-export const metadata: Metadata = { title: "Iniciar sesión — STOKA Finance" };
+export const metadata: Metadata = { title: "Iniciar sesión" };
 
 interface LoginPageProps {
   searchParams: Promise<{ error?: string; reason?: string; closed?: string }>;

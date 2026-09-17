@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 
-export const metadata: Metadata = { title: "Recuperar contraseña — STOKA Finance" };
+export const metadata: Metadata = { title: "Recuperar contraseña" };
 
 // SECURITY-07: fuerza render dinámico (ver login/page.tsx).
 export default async function ForgotPasswordPage() {

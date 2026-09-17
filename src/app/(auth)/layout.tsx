@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoPhoto } from "@/components/brand/logo-photo";
 import { WordmarkPhoto } from "@/components/brand/wordmark-photo";
 import { Card, CardContent } from "@/components/ui/card";
+
+// Las rutas de auth (login, registro, recuperar/resetear contraseña) no
+// aportan nada a un visitante que llega desde una búsqueda -- son pantallas
+// de credenciales, no contenido. Ninguna página hija de este layout define
+// `robots` propio, así que heredan este valor sin cambios adicionales.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
