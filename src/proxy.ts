@@ -77,7 +77,14 @@ export const config = {
      * (favicon/apple-touch-icon) — sin excluirlas, un visitante sin sesión
      * quedaba redirigido a /login al pedirlas, y el navegador nunca
      * recibía la imagen real.
+     *
+     * Mismo bug, encontrado ahora (GSC no podía obtener /sitemap.xml — le
+     * llegaba el redirect a /login en vez del XML): `robots.txt`,
+     * `sitemap.xml` y `opengraph-image` son también rutas de convención de
+     * Next sin sesión de por medio. Sin excluirlas, NINGÚN crawler sin
+     * cookie pudo leer nunca /robots.txt real — recibía la página de login
+     * con 200, no las reglas.
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|media/|icon|apple-icon|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|robots.txt|sitemap.xml|opengraph-image|icons/|media/|icon|apple-icon|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm)$).*)",
   ],
 };
