@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, ShieldCheck, User } from "lucide-react";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { cn } from "@/lib/utils/cn";
 
 interface UserMenuProps {
   fullName: string | null;
   email: string;
+  isAdmin?: boolean;
 }
 
 function initialsOf(name: string | null, email: string): string {
@@ -18,7 +19,7 @@ function initialsOf(name: string | null, email: string): string {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function UserMenu({ fullName, email }: UserMenuProps) {
+export function UserMenu({ fullName, email, isAdmin = false }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -55,6 +56,16 @@ export function UserMenu({ fullName, email }: UserMenuProps) {
             <p className="truncate text-xs text-muted-foreground">{email}</p>
           </div>
           <div className="my-1 h-px bg-border" />
+          {isAdmin ? (
+            <Link
+              href="/admin/users"
+              role="menuitem"
+              className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm text-foreground hover:bg-muted"
+              onClick={() => setOpen(false)}
+            >
+              <ShieldCheck className="h-4 w-4" /> Administrar usuarios
+            </Link>
+          ) : null}
           <Link
             href="/settings"
             role="menuitem"
