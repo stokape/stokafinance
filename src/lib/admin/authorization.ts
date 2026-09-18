@@ -1,6 +1,6 @@
 import "server-only";
 
-const DEFAULT_ADMIN_EMAILS = ["contacto@stoka.pe"];
+const DEFAULT_ADMIN_EMAILS = ["stoka.peru@gmail.com"];
 
 function configuredAdminEmails(): string[] {
   const configured = process.env.ADMIN_EMAILS
