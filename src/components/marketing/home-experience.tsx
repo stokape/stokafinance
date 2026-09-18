@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import styles from "@/app/home.module.css";
+import { buildSalesWhatsAppUrl, SALES_EMAIL } from "@/lib/config/sales";
 
 const horizons = {
   hoy: {
@@ -82,6 +83,10 @@ const faqs = [
     answer: "No. Mensual y anual incluyen exactamente lo mismo. Solo cambia la frecuencia de cobro y el ahorro del plan anual.",
   },
   {
+    question: "¿Cómo pago y activo mi cuenta?",
+    answer: "Elige un plan y escríbenos por WhatsApp. Te enviaremos los datos para pagar por Yape o transferencia. Cuando confirmemos el pago, recibirás la invitación para crear tu acceso.",
+  },
+  {
     question: "¿Puedo exportar mi información?",
     answer: "Sí. Puedes exportar tus datos desde la configuración de tu cuenta.",
   },
@@ -130,6 +135,8 @@ export function HomeExperience({ isAuthenticated }: { isAuthenticated: boolean }
 
   const accountHref = isAuthenticated ? "/dashboard" : "/login";
   const accountLabel = isAuthenticated ? "Ir a mi panel" : "Ya tengo una cuenta";
+  const annualWhatsAppUrl = buildSalesWhatsAppUrl("annual");
+  const monthlyWhatsAppUrl = buildSalesWhatsAppUrl("monthly");
   const activeHorizon = horizons[horizon];
 
   return (
@@ -328,11 +335,11 @@ export function HomeExperience({ isAuthenticated }: { isAuthenticated: boolean }
               <span>por cuenta / año</span>
             </div>
             <p className={styles.equivalent}>Equivale a S/16.58 al mes</p>
-            <Link className={styles.priceCta} href="/register">
-              Elegir plan anual
+            <a className={styles.priceCta} href={annualWhatsAppUrl} target="_blank" rel="noreferrer">
+              Contratar plan anual
               <ArrowRight aria-hidden="true" size={18} />
-            </Link>
-            <p className={styles.paymentNote}>Pago único anual. Renovación anual.</p>
+            </a>
+            <p className={styles.paymentNote}>Pago único anual por Yape o transferencia. Activación después de confirmar el pago.</p>
           </article>
 
           <article className={styles.priceSecondary}>
@@ -344,11 +351,11 @@ export function HomeExperience({ isAuthenticated }: { isAuthenticated: boolean }
               <strong>S/24.90</strong>
               <span>por cuenta / mes</span>
             </div>
-            <Link className={styles.secondaryCta} href="/register">
-              Elegir plan mensual
+            <a className={styles.secondaryCta} href={monthlyWhatsAppUrl} target="_blank" rel="noreferrer">
+              Contratar plan mensual
               <ArrowRight aria-hidden="true" size={18} />
-            </Link>
-            <p className={styles.paymentNote}>Renovación mensual.</p>
+            </a>
+            <p className={styles.paymentNote}>Renovación mensual por Yape o transferencia.</p>
           </article>
 
           <div className={styles.included}>
@@ -379,9 +386,9 @@ export function HomeExperience({ isAuthenticated }: { isAuthenticated: boolean }
       <section className={styles.finalCta}>
         <div>
           <h2>Que tu próxima decisión empiece con claridad.</h2>
-          <p>Elige tu plan y lleva presente, compromisos y metas al mismo lugar.</p>
+          <p>Elige tu plan, confirma el pago y recibe tu acceso personal.</p>
         </div>
-        <a className={styles.primaryAction} href="#precios">Ver precios <ArrowRight aria-hidden="true" size={18} /></a>
+        <a className={styles.primaryAction} href={annualWhatsAppUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <ArrowRight aria-hidden="true" size={18} /></a>
       </section>
 
       <footer className={styles.footer}>
@@ -393,6 +400,7 @@ export function HomeExperience({ isAuthenticated }: { isAuthenticated: boolean }
         <div className={styles.footerLinks}>
           <a href="#producto">Producto</a>
           <a href="#precios">Precios</a>
+          <a href={`mailto:${SALES_EMAIL}`}>Contacto</a>
           <Link href={accountHref}>{accountLabel}</Link>
         </div>
         <p>© {new Date().getFullYear()} STOKA Finance</p>

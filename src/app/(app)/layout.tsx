@@ -6,6 +6,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { QuickAddTransactionMenu } from "@/features/transactions/components/quick-add-transaction-menu";
 import { AppLockGate } from "@/features/app-lock/components/app-lock-gate";
 import { isAdminEmail } from "@/lib/admin/authorization";
+import { resolveSubscriptionAccess } from "@/lib/access/subscription";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServerClient();
@@ -16,6 +17,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) {
     redirect("/login");
   }
+
+  const isAdmin = isAdminEmail(user.email);
+  const subscriptionAccess = resolveSubscriptionAccess({
+    appMetadata: user.app_metadata,
+    createdAt: user.created_at,
+    isAdmin,
+  });
+  if (!subscriptionAccess.allowed) redirect("/account-status");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -35,7 +44,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Topbar
             fullName={profile?.full_name ?? null}
             email={user.email ?? ""}
-            isAdmin={isAdminEmail(user.email)}
+            isAdmin={isAdmin}
+            subscription={isAdmin ? null : subscriptionAccess}
             quickAddSlot={<QuickAddTransactionMenu />}
           />
           <main className="flex-1 px-4 pb-20 pt-4 md:px-6 md:pb-6">{children}</main>

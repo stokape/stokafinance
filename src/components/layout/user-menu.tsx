@@ -5,11 +5,14 @@ import Link from "next/link";
 import { LogOut, Settings, ShieldCheck, User } from "lucide-react";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { cn } from "@/lib/utils/cn";
+import { SALES_PLANS } from "@/lib/config/sales";
+import type { SubscriptionAccess } from "@/lib/access/subscription";
 
 interface UserMenuProps {
   fullName: string | null;
   email: string;
   isAdmin?: boolean;
+  subscription?: SubscriptionAccess | null;
 }
 
 function initialsOf(name: string | null, email: string): string {
@@ -19,7 +22,7 @@ function initialsOf(name: string | null, email: string): string {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function UserMenu({ fullName, email, isAdmin = false }: UserMenuProps) {
+export function UserMenu({ fullName, email, isAdmin = false, subscription = null }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -54,6 +57,14 @@ export function UserMenu({ fullName, email, isAdmin = false }: UserMenuProps) {
           <div className="px-3 py-2">
             <p className="truncate text-sm font-medium">{fullName || "Usuario"}</p>
             <p className="truncate text-xs text-muted-foreground">{email}</p>
+            {subscription ? (
+              <p className="mt-2 text-xs font-medium text-primary">
+                {subscription.plan ? `Plan ${SALES_PLANS[subscription.plan].label.toLowerCase()}` : "Cuenta activa"}
+                {subscription.daysRemaining !== null
+                  ? ` · ${subscription.daysRemaining} ${subscription.daysRemaining === 1 ? "día restante" : "días restantes"}`
+                  : ""}
+              </p>
+            ) : null}
           </div>
           <div className="my-1 h-px bg-border" />
           {isAdmin ? (

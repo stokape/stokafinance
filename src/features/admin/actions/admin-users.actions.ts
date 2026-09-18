@@ -7,12 +7,189 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin/authorization";
 import { logger } from "@/lib/utils/logger";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
+import { appConfig } from "@/lib/config/app";
+import {
+  readSubscriptionMetadata,
+  subscriptionMetadataForUpdate,
+  todayInLima,
+} from "@/lib/access/subscription";
+
+const planSchema = z.enum(["monthly", "annual"]);
+const paymentMethodSchema = z.enum(["yape", "transfer"]);
+const paidThroughSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+const subscriptionSchema = z.object({
+  userId: z.uuid(),
+  targetEmail: z.email(),
+  plan: planSchema,
+  paidThrough: paidThroughSchema,
+  paymentMethod: paymentMethodSchema,
+});
+
+const inviteSchema = z.object({
+  fullName: z.string().trim().min(2).max(100),
+  email: z.email(),
+  plan: planSchema,
+  paidThrough: paidThroughSchema,
+  paymentMethod: paymentMethodSchema,
+});
+
+const targetSchema = z.object({
+  userId: z.uuid(),
+  targetEmail: z.email(),
+});
 
 const deleteUserSchema = z.object({
   userId: z.uuid(),
   targetEmail: z.email(),
   confirmation: z.email(),
 });
+
+async function currentAdministrator() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user && isAdminEmail(user.email) ? user : null;
+}
+
+function validFutureDate(value: string): boolean {
+  return value >= todayInLima() && Number.isFinite(Date.parse(`${value}T00:00:00.000Z`));
+}
+
+export async function invitePaidUserAction(
+  _previousState: ActionResult<{ inviteUrl: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ inviteUrl: string }>> {
+  const administrator = await currentAdministrator();
+  if (!administrator) return actionError("No tienes permisos para administrar usuarios.");
+
+  const parsed = inviteSchema.safeParse({
+    fullName: formData.get("fullName"),
+    email: formData.get("email"),
+    plan: formData.get("plan"),
+    paidThrough: formData.get("paidThrough"),
+    paymentMethod: formData.get("paymentMethod"),
+  });
+  if (!parsed.success) return actionError("Revisa los datos de la invitación.", parsed.error.flatten().fieldErrors);
+  if (!validFutureDate(parsed.data.paidThrough)) return actionError("La vigencia debe terminar hoy o en una fecha futura.");
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email: parsed.data.email.toLowerCase(),
+    options: { data: { full_name: parsed.data.fullName } },
+  });
+  if (error || !data.user || !data.properties.hashed_token) {
+    logger.warn("admin_invite_user_failed", { actorId: administrator.id, reason: error?.message ?? "missing_user" });
+    return actionError("No se pudo crear la invitación. Si la cuenta ya existe, búscala y activa su plan.");
+  }
+
+  const subscription = subscriptionMetadataForUpdate(parsed.data);
+  const { error: updateError } = await admin.auth.admin.updateUserById(data.user.id, {
+    app_metadata: { ...data.user.app_metadata, subscription },
+  });
+  if (updateError) {
+    logger.error("admin_invite_subscription_failed", {
+      actorId: administrator.id,
+      targetId: data.user.id,
+      error: updateError.message,
+    });
+    return actionError("La cuenta fue creada, pero falta activar el plan. Busca la cuenta y completa la activación.");
+  }
+
+  logger.info("admin_paid_user_invited", { actorId: administrator.id, targetId: data.user.id });
+  revalidatePath("/admin/users");
+  const inviteUrl = new URL("/auth/confirm", appConfig.url);
+  inviteUrl.searchParams.set("token_hash", data.properties.hashed_token);
+  inviteUrl.searchParams.set("type", "invite");
+  inviteUrl.searchParams.set("next", "/reset-password");
+  return actionSuccess({ inviteUrl: inviteUrl.toString() });
+}
+
+export async function updateUserSubscriptionAction(
+  _previousState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const administrator = await currentAdministrator();
+  if (!administrator) return actionError("No tienes permisos para administrar usuarios.");
+
+  const parsed = subscriptionSchema.safeParse({
+    userId: formData.get("userId"),
+    targetEmail: formData.get("targetEmail"),
+    plan: formData.get("plan"),
+    paidThrough: formData.get("paidThrough"),
+    paymentMethod: formData.get("paymentMethod"),
+  });
+  if (!parsed.success) return actionError("Revisa los datos del plan.", parsed.error.flatten().fieldErrors);
+  if (!validFutureDate(parsed.data.paidThrough)) return actionError("La vigencia debe terminar hoy o en una fecha futura.");
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.auth.admin.getUserById(parsed.data.userId);
+  const target = data.user;
+  if (error || !target?.email || target.email.toLowerCase() !== parsed.data.targetEmail.toLowerCase()) {
+    return actionError("La cuenta cambió o ya no existe. Actualiza la página.");
+  }
+  if (isAdminEmail(target.email)) return actionError("El acceso administrador no requiere un plan.");
+
+  const previous = readSubscriptionMetadata(target.app_metadata);
+  const subscription = subscriptionMetadataForUpdate({ ...parsed.data, previous });
+  const { error: updateError } = await admin.auth.admin.updateUserById(target.id, {
+    app_metadata: { ...target.app_metadata, subscription },
+  });
+  if (updateError) {
+    logger.error("admin_subscription_update_failed", {
+      actorId: administrator.id,
+      targetId: target.id,
+      error: updateError.message,
+    });
+    return actionError("No se pudo actualizar el plan. Intenta nuevamente.");
+  }
+
+  logger.info("admin_subscription_updated", { actorId: administrator.id, targetId: target.id });
+  revalidatePath("/admin/users");
+  return actionSuccess(undefined);
+}
+
+export async function suspendUserSubscriptionAction(
+  _previousState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const administrator = await currentAdministrator();
+  if (!administrator) return actionError("No tienes permisos para administrar usuarios.");
+
+  const parsed = targetSchema.safeParse({
+    userId: formData.get("userId"),
+    targetEmail: formData.get("targetEmail"),
+  });
+  if (!parsed.success) return actionError("La cuenta no es válida.");
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.auth.admin.getUserById(parsed.data.userId);
+  const target = data.user;
+  if (error || !target?.email || target.email.toLowerCase() !== parsed.data.targetEmail.toLowerCase()) {
+    return actionError("La cuenta cambió o ya no existe. Actualiza la página.");
+  }
+  if (isAdminEmail(target.email)) return actionError("La cuenta administradora no puede suspenderse.");
+
+  const previous = readSubscriptionMetadata(target.app_metadata);
+  const subscription = {
+    status: "suspended" as const,
+    plan: previous?.plan ?? null,
+    paid_through: previous?.paidThrough ?? null,
+    payment_method: previous?.paymentMethod ?? null,
+    activated_at: previous?.activatedAt ?? null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error: updateError } = await admin.auth.admin.updateUserById(target.id, {
+    app_metadata: { ...target.app_metadata, subscription },
+  });
+  if (updateError) return actionError("No se pudo suspender la cuenta. Intenta nuevamente.");
+
+  logger.info("admin_subscription_suspended", { actorId: administrator.id, targetId: target.id });
+  revalidatePath("/admin/users");
+  return actionSuccess(undefined);
+}
 
 async function prepareUserDeletion(userId: string): Promise<string | null> {
   const admin = createSupabaseAdminClient();

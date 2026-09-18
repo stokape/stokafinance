@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail } from "@/lib/admin/authorization";
 import { AdminUserTable } from "@/features/admin/components/admin-user-table";
 import type { AdminUserRow } from "@/features/admin/types/admin-user.types";
+import { resolveSubscriptionAccess } from "@/lib/access/subscription";
 
 export const metadata: Metadata = { title: "Administrar usuarios", robots: { index: false, follow: false } };
 
@@ -44,16 +45,30 @@ export default async function AdminUsersPage() {
 
   const users: AdminUserRow[] = authUsers
     .filter((user): user is typeof user & { email: string } => Boolean(user.email))
-    .map((user) => ({
-      id: user.id,
-      email: user.email,
-      fullName: names.get(user.id) ?? null,
-      provider: String(user.app_metadata?.provider ?? "email"),
-      createdAt: user.created_at,
-      lastSignInAt: user.last_sign_in_at ?? null,
-      emailConfirmed: Boolean(user.email_confirmed_at),
-      isCurrentAdmin: user.id === administrator.id,
-    }))
+    .map((user) => {
+      const userIsAdmin = isAdminEmail(user.email);
+      const access = resolveSubscriptionAccess({
+        appMetadata: user.app_metadata,
+        createdAt: user.created_at,
+        isAdmin: userIsAdmin,
+      });
+      return {
+        id: user.id,
+        email: user.email,
+        fullName: names.get(user.id) ?? null,
+        provider: String(user.app_metadata?.provider ?? "email"),
+        createdAt: user.created_at,
+        lastSignInAt: user.last_sign_in_at ?? null,
+        emailConfirmed: Boolean(user.email_confirmed_at),
+        isCurrentAdmin: user.id === administrator.id,
+        isAdmin: userIsAdmin,
+        subscriptionStatus: access.status,
+        plan: access.plan,
+        paidThrough: access.paidThrough,
+        paymentMethod: access.paymentMethod,
+        daysRemaining: access.daysRemaining,
+      };
+    })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
@@ -65,7 +80,7 @@ export default async function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Control de acceso</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Revisa las cuentas registradas y elimina definitivamente aquellas que correspondan. La eliminación limpia primero los datos financieros para evitar registros incompletos.
+            Invita clientes después de validar su comprobante, controla la vigencia de cada plan y suspende el acceso sin borrar sus datos.
           </p>
         </div>
       </div>

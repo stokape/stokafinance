@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label, FieldError } from "@/components/ui/label";
 import type { ActionResult } from "@/types/action-result";
+import { buildSalesWhatsAppUrl } from "@/lib/config/sales";
 
 const initialState: ActionResult = { ok: false, error: "" };
 
@@ -44,10 +45,10 @@ export function LoginForm() {
       <OAuthButtons providers={["google"]} />
 
       <p className="text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link href="/register" className="text-primary hover:underline">
-          Regístrate
-        </Link>
+        ¿Aún no eres cliente?{" "}
+        <a href={buildSalesWhatsAppUrl()} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+          Contrata un plan por WhatsApp
+        </a>
       </p>
     </div>
   );

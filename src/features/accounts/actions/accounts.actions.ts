@@ -6,6 +6,7 @@ import { AccountsService } from "@/features/accounts/services/accounts.service";
 import { createAccountSchema, updateAccountSchema } from "@/features/accounts/validations/account.schema";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
 import { logger } from "@/lib/utils/logger";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
@@ -13,6 +14,7 @@ async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("UNAUTHENTICATED");
+  requireActiveSubscription(user);
   return { supabase, user };
 }
 

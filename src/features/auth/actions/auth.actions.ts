@@ -9,7 +9,6 @@ import { actionError, actionSuccess, type ActionResult } from "@/types/action-re
 import {
   forgotPasswordSchema,
   loginSchema,
-  registerSchema,
   resetPasswordSchema,
 } from "@/features/auth/validations/auth.schema";
 
@@ -61,68 +60,8 @@ export async function loginAction(_prevState: unknown, formData: FormData): Prom
 }
 
 export async function registerAction(_prevState: unknown, formData: FormData): Promise<ActionResult<{ needsEmailConfirmation: boolean }>> {
-  const parsed = registerSchema.safeParse({
-    fullName: formData.get("fullName"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
-  });
-  if (!parsed.success) {
-    return actionError("Revisa los campos del formulario.", parsed.error.flatten().fieldErrors);
-  }
-
-  // SECURITY-02: limita registros masivos/spam de emails de confirmación —
-  // 5 por IP y 3 por email cada hora (un email nuevo casi nunca necesita
-  // más de un par de intentos de registro).
-  const allowed = await checkAuthRateLimit({
-    action: "register",
-    email: parsed.data.email,
-    emailMaxAttempts: 3,
-    ipMaxAttempts: 5,
-    windowSeconds: 3600,
-  });
-  if (!allowed) {
-    logger.warn("register_rate_limited", { email: parsed.data.email });
-    return actionError(RATE_LIMITED_MESSAGE);
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.fullName,
-        currency: appConfig.defaultCurrency,
-        timezone: appConfig.defaultTimezone,
-        locale: appConfig.defaultLocale,
-      },
-      emailRedirectTo: `${appConfig.url}/auth/callback`,
-    },
-  });
-
-  if (error) {
-    logger.warn("register_failed", { reason: error.message });
-
-    // SECURITY (V-07, CWE-203/204): "User already registered" se responde
-    // IGUAL que un registro exitoso — nunca confirmar al cliente si un
-    // correo ya tiene cuenta, o cualquiera podría enumerar usuarios
-    // probando registrarse. El log server-side sí queda con el detalle real
-    // para soporte/observabilidad.
-    if (error.message === "User already registered") {
-      return actionSuccess({ needsEmailConfirmation: true });
-    }
-
-    return actionError(mapAuthError(error.message));
-  }
-
-  // Con confirmación de correo activada, `session` viene null hasta que el
-  // usuario confirma. Sin confirmación (dev), ya queda logueado.
-  if (data.session) {
-    redirect("/onboarding");
-  }
-
-  return actionSuccess({ needsEmailConfirmation: true });
+  void formData;
+  return actionError("El registro es por invitación después de confirmar el pago. Contáctanos desde la página de planes.");
 }
 
 export async function logoutAction(): Promise<void> {

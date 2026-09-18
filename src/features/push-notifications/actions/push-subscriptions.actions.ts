@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
 import { logger } from "@/lib/utils/logger";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 
 interface PushSubscriptionJson {
   endpoint: string;
@@ -21,6 +22,7 @@ export async function savePushSubscriptionAction(subscription: PushSubscriptionJ
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return actionError("Tu sesión expiró. Vuelve a iniciar sesión.");
+  requireActiveSubscription(user);
 
   const userAgent = (await headers()).get("user-agent");
 
@@ -50,6 +52,7 @@ export async function deletePushSubscriptionAction(endpoint: string): Promise<Ac
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return actionError("Tu sesión expiró. Vuelve a iniciar sesión.");
+  requireActiveSubscription(user);
 
   const { error } = await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", endpoint);
   if (error) {

@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { updateProfileSchema } from "@/features/settings/validations/profile.schema";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
 import { logger } from "@/lib/utils/logger";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 
 export async function updateProfileAction(_prevState: unknown, formData: FormData): Promise<ActionResult> {
   const parsed = updateProfileSchema.safeParse(Object.fromEntries(formData));
@@ -17,6 +18,7 @@ export async function updateProfileAction(_prevState: unknown, formData: FormDat
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return actionError("Tu sesión expiró. Vuelve a iniciar sesión.");
+  requireActiveSubscription(user);
 
   const { error } = await supabase
     .from("profiles")

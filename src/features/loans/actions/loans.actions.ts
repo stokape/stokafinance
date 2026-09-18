@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 import { LoansService } from "@/features/loans/services/loans.service";
 import { createLoanSchema, payLoanInstallmentSchema } from "@/features/loans/validations/loan.schema";
 import { actionError, actionSuccess, type ActionResult } from "@/types/action-result";
@@ -13,6 +14,7 @@ async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("UNAUTHENTICATED");
+  requireActiveSubscription(user);
   return { supabase, user };
 }
 

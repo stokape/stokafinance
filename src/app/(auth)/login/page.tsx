@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <div className="space-y-5">
       <div className="space-y-1 text-center">
         <h1 className="text-xl font-semibold">Bienvenido de nuevo</h1>
-        <p className="text-sm text-muted-foreground">Inicia sesión para ver tus finanzas.</p>
+        <p className="text-sm text-muted-foreground">Acceso exclusivo para clientes con un plan activo.</p>
       </div>
       {error === "auth_callback_failed" ? (
         <div className="rounded-md border border-danger/30 bg-danger-bg px-3 py-2 text-sm text-danger">

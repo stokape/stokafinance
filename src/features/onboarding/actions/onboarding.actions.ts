@@ -6,6 +6,7 @@ import { OnboardingService } from "@/features/onboarding/services/onboarding.ser
 import { onboardingSchema } from "@/features/onboarding/validations/onboarding.schema";
 import { actionError, type ActionResult } from "@/types/action-result";
 import { logger } from "@/lib/utils/logger";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 
 export async function completeOnboardingAction(_prevState: unknown, formData: FormData): Promise<ActionResult> {
   const parsed = onboardingSchema.safeParse(Object.fromEntries(formData));
@@ -18,6 +19,7 @@ export async function completeOnboardingAction(_prevState: unknown, formData: Fo
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  requireActiveSubscription(user);
 
   try {
     await new OnboardingService(supabase).completeOnboarding(user.id, parsed.data);

@@ -1,5 +1,6 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireActiveSubscription } from "@/lib/access/require-subscription";
 
 /**
  * Defensa en profundidad (auditoría de seguridad, V-13): confirma sesión
@@ -15,5 +16,6 @@ export async function getAuthenticatedSupabase() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (user) requireActiveSubscription(user);
   return { supabase, user };
 }

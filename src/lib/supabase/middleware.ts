@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database.types";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
+import { isAdminEmail } from "@/lib/admin/authorization";
+import { resolveSubscriptionAccess } from "@/lib/access/subscription";
 
 const PUBLIC_PATHS = [
   "/",
@@ -10,6 +12,7 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/auth/confirm",
   // Vercel Cron llama esto sin cookie de sesión (no es un usuario) — la
   // propia ruta exige "Authorization: Bearer $CRON_SECRET", más estricto
   // que una sesión de usuario normal. Ver src/app/api/cron/*/route.ts.
@@ -75,8 +78,33 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
     return redirectResponse;
   }
 
+  if (user) {
+    const access = resolveSubscriptionAccess({
+      appMetadata: user.app_metadata,
+      createdAt: user.created_at,
+      isAdmin: isAdminEmail(user.email),
+    });
+
+    if (!access.allowed && !isPublicPath(pathname) && pathname !== "/account-status") {
+      const redirectResponse = NextResponse.redirect(new URL("/account-status", request.url));
+      redirectResponse.headers.set("Content-Security-Policy", cspHeaderValue);
+      return redirectResponse;
+    }
+
+    if (access.allowed && pathname === "/account-status") {
+      const redirectResponse = NextResponse.redirect(new URL("/dashboard", request.url));
+      redirectResponse.headers.set("Content-Security-Policy", cspHeaderValue);
+      return redirectResponse;
+    }
+  }
+
   if (user && (pathname === "/login" || pathname === "/register")) {
-    const redirectResponse = NextResponse.redirect(new URL("/dashboard", request.url));
+    const access = resolveSubscriptionAccess({
+      appMetadata: user.app_metadata,
+      createdAt: user.created_at,
+      isAdmin: isAdminEmail(user.email),
+    });
+    const redirectResponse = NextResponse.redirect(new URL(access.allowed ? "/dashboard" : "/account-status", request.url));
     redirectResponse.headers.set("Content-Security-Policy", cspHeaderValue);
     return redirectResponse;
   }
