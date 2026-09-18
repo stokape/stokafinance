@@ -27,17 +27,42 @@ const stokaDisplay = Syne({
   subsets: ["latin"],
 });
 
+const defaultTitle = `${appConfig.name} — ${appConfig.tagline}`;
+const defaultDescription = "Control integral de tus finanzas personales: cuentas, movimientos, presupuesto, deudas, metas y patrimonio en un solo lugar.";
+
 export const metadata: Metadata = {
+  // Requerido para que las URLs relativas de OG/canonical (acá y en
+  // page.tsx) resuelvan al dominio real en vez de quedar relativas o
+  // apuntar a localhost en el HTML servido.
+  metadataBase: new URL(appConfig.url),
   title: {
-    default: `${appConfig.name} — ${appConfig.tagline}`,
+    default: defaultTitle,
     template: `%s — ${appConfig.name}`,
   },
-  description: "Control integral de tus finanzas personales: cuentas, movimientos, presupuesto, deudas, metas y patrimonio en un solo lugar.",
+  description: defaultDescription,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: appConfig.name,
+  },
+  // Defaults de vista previa social (WhatsApp/Twitter/LinkedIn) — antes no
+  // existían, así que compartir un link de STOKA no mostraba imagen ni
+  // descripción. La landing (page.tsx) los sobreescribe con su propio
+  // título/descripción; `images` sale automático del opengraph-image.tsx
+  // co-ubicado en cada ruta (convención de archivo de Next.js).
+  openGraph: {
+    type: "website",
+    locale: "es_PE",
+    url: appConfig.url,
+    siteName: appConfig.name,
+    title: defaultTitle,
+    description: defaultDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
   },
 };
 
