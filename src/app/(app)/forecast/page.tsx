@@ -82,10 +82,6 @@ export default async function ForecastPage({ searchParams }: ForecastPageProps) 
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        No incluye compras con tarjeta (su fecha de vencimiento depende del ciclo de cierre/pago, aún no modelado) ni ingresos recurrentes
-        (roadmap Fase 7).
-      </p>
     </div>
   );
 }

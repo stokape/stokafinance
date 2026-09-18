@@ -13,7 +13,7 @@ export default function ImportTransactionsPage() {
       </Link>
       <div>
         <h1 className="text-xl font-semibold">Importar movimientos</h1>
-        <p className="text-sm text-muted-foreground">Sube un CSV exportado de tu banco. Excel (.xlsx) próximamente.</p>
+        <p className="text-sm text-muted-foreground">Sube un archivo CSV exportado de tu banco.</p>
       </div>
       <CsvImportWizard />
     </div>

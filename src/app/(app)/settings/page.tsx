@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ShieldCheck, CloudUpload, Download, AlertTriangle, Bell } from "lucide-react";
+import { ShieldCheck, Download, AlertTriangle, Bell } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
@@ -85,24 +85,6 @@ export default async function SettingsPage() {
             Avisos de facturas por vencer y suscripciones a punto de renovarse. Se activan por dispositivo/navegador.
           </p>
           <PushNotificationsToggle />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <span className="flex items-center gap-2">
-              <CloudUpload className="h-4 w-4" /> Seguridad y datos — Backups
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            El módulo de backups cifrados a Google Drive está planificado (Fase 9 del roadmap, ver
-            docs/backup.md) y no está activo todavía. Ningún dato se respalda automáticamente por ahora
-            — el respaldo real de la base de datos depende de la configuración de Supabase (ver
-            docs/disaster-recovery.md).
-          </p>
         </CardContent>
       </Card>
 

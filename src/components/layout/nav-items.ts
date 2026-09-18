@@ -19,23 +19,20 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Módulos aún no implementados: la página existe pero muestra un placeholder honesto (roadmap). */
-  status: "ready" | "planned";
 }
 
-/** Navegación principal (§5/§10). El orden importa: refleja el roadmap de fases. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, status: "ready" },
-  { href: "/transactions", label: "Movimientos", icon: ArrowLeftRight, status: "ready" },
-  { href: "/accounts", label: "Cuentas", icon: Wallet, status: "ready" },
-  { href: "/budgets", label: "Presupuesto", icon: PiggyBank, status: "ready" },
-  { href: "/bills", label: "Pagos", icon: Receipt, status: "ready" },
-  { href: "/cards", label: "Tarjetas", icon: CreditCard, status: "ready" },
-  { href: "/loans", label: "Deudas", icon: Landmark, status: "ready" },
-  { href: "/subscriptions", label: "Suscripciones", icon: Repeat, status: "ready" },
-  { href: "/goals", label: "Metas", icon: Target, status: "ready" },
-  { href: "/net-worth", label: "Patrimonio", icon: TrendingUp, status: "ready" },
-  { href: "/forecast", label: "Proyecciones", icon: LineChart, status: "ready" },
-  { href: "/reports", label: "Reportes", icon: FileBarChart, status: "ready" },
-  { href: "/settings", label: "Configuración", icon: Settings, status: "ready" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/transactions", label: "Movimientos", icon: ArrowLeftRight },
+  { href: "/accounts", label: "Cuentas", icon: Wallet },
+  { href: "/budgets", label: "Presupuesto", icon: PiggyBank },
+  { href: "/bills", label: "Pagos", icon: Receipt },
+  { href: "/cards", label: "Tarjetas", icon: CreditCard },
+  { href: "/loans", label: "Deudas", icon: Landmark },
+  { href: "/subscriptions", label: "Suscripciones", icon: Repeat },
+  { href: "/goals", label: "Metas", icon: Target },
+  { href: "/net-worth", label: "Patrimonio", icon: TrendingUp },
+  { href: "/forecast", label: "Proyecciones", icon: LineChart },
+  { href: "/reports", label: "Reportes", icon: FileBarChart },
+  { href: "/settings", label: "Configuración", icon: Settings },
 ];

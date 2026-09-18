@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, Construction } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { LogoPhoto } from "@/components/brand/logo-photo";
 import { cn } from "@/lib/utils/cn";
@@ -45,12 +45,7 @@ export function Sidebar() {
               title={collapsed ? item.label : undefined}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              {!collapsed ? (
-                <span className="flex flex-1 items-center justify-between truncate">
-                  {item.label}
-                  {item.status === "planned" ? <Construction className="h-3 w-3 text-muted-foreground/60" aria-label="Próximamente" /> : null}
-                </span>
-              ) : null}
+              {!collapsed ? <span className="truncate">{item.label}</span> : null}
             </Link>
           );
         })}
