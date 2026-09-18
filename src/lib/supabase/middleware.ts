@@ -4,6 +4,7 @@ import type { Database } from "@/types/database.types";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 
 const PUBLIC_PATHS = [
+  "/",
   "/login",
   "/register",
   "/forgot-password",

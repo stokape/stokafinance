@@ -78,6 +78,6 @@ export const config = {
      * quedaba redirigido a /login al pedirlas, y el navegador nunca
      * recibía la imagen real.
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|icon|apple-icon|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|media/|icon|apple-icon|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm)$).*)",
   ],
 };

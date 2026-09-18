@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope, Syne } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SentryClientInit } from "@/components/providers/sentry-client-init";
@@ -14,6 +14,16 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const stokaBody = Manrope({
+  variable: "--font-stoka-body",
+  subsets: ["latin"],
+});
+
+const stokaDisplay = Syne({
+  variable: "--font-stoka-display",
   subsets: ["latin"],
 });
 
@@ -46,7 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
-    <html lang="es" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="es" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${stokaBody.variable} ${stokaDisplay.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ThemeProvider nonce={nonce}>
           <SentryClientInit />
